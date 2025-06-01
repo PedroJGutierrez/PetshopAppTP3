@@ -21,11 +21,14 @@ import com.proyecto.petshopapp.login.*
 fun NavigationGraph(
     navController: NavHostController,
     loginViewModel: LoginViewModel,
-    startDestination: String = "onboarding"
+    startDestination: String = "splash"
 ) {
     val productViewModel: ProductViewModel = viewModel()
 
     NavHost(navController = navController, startDestination = startDestination) {
+        composable("splash") {
+            SplashScreen(navController, loginViewModel)
+        }
         composable("onboarding") {
             OnboardingScreen(navController)
         }
@@ -42,7 +45,7 @@ fun NavigationGraph(
             ForgotPasswordConfirmScreen(navController)
         }
         composable("search") {
-            SearchScreen(navController)
+            SearchScreen(navController = navController, productViewModel = productViewModel)
         }
         composable("notifications") {
             NotificationScreen(navController)

@@ -81,4 +81,14 @@ class LoginViewModel : ViewModel() {
                 )
             }
     }
+    fun observeFirebaseUser(onUserAvailable: (String) -> Unit) {
+        val auth = FirebaseAuth.getInstance()
+        val listener = FirebaseAuth.AuthStateListener { firebaseAuth ->
+            val user = firebaseAuth.currentUser
+            if (user != null) {
+                onUserAvailable(user.uid)
+            }
+        }
+        auth.addAuthStateListener(listener)
+    }
 }
