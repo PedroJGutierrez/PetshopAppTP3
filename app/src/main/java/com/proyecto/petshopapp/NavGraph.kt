@@ -62,10 +62,10 @@ fun NavigationGraph(
             }
         }
         composable("favorites") {
-            FavoritesScreen(navController)
+            FavoritesScreen(navController = navController, loginViewModel = loginViewModel)
         }
         composable("cart") {
-            CartScreen(navController)
+            CartScreen(navController = navController, loginViewModel = loginViewModel)
         }
         composable(
             "product_detail/{productId}",
@@ -76,7 +76,11 @@ fun NavigationGraph(
             val product = productsState.value.find { it.id == productId }
 
             if (product != null) {
-                ProductDetailScreen(product = product, navController = navController)
+                ProductDetailScreen(
+                    product = product,
+                    navController = navController,
+                    loginViewModel = loginViewModel
+                )
             } else {
                 Text("Producto no encontrado")
             }

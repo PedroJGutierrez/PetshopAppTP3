@@ -22,6 +22,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
@@ -29,15 +30,16 @@ import com.google.firebase.firestore.SetOptions
 import com.google.firebase.firestore.toObject
 import com.proyecto.petshopapp.R
 import com.proyecto.petshopapp.data.models.Product
+import com.proyecto.petshopapp.login.LoginViewModel
 import kotlinx.coroutines.tasks.await
 
 @Composable
-fun FavoritesScreen(navController: NavController) {
+fun FavoritesScreen(navController: NavController, loginViewModel: LoginViewModel) {
     val context = LocalContext.current
     val firestore = remember { FirebaseFirestore.getInstance() }
     val currentUser = FirebaseAuth.getInstance().currentUser
     var favorites by remember { mutableStateOf<List<Product>>(emptyList()) }
-    var reloadTrigger by remember { mutableStateOf(0) } // 👈 para forzar reload
+    var reloadTrigger by remember { mutableStateOf(0) }
 
     LaunchedEffect(currentUser?.uid, reloadTrigger) {
         currentUser?.let { user ->
@@ -77,8 +79,9 @@ fun FavoritesScreen(navController: NavController) {
                 FavoriteProductCard(
                     product = product,
                     navController = navController,
+                    loginViewModel = loginViewModel,
                     onFavoriteChanged = {
-                        reloadTrigger++ // 👈 fuerza recarga
+                        reloadTrigger++
                     }
                 )
             }
@@ -90,7 +93,8 @@ fun FavoritesScreen(navController: NavController) {
 fun FavoriteProductCard(
     product: Product,
     navController: NavController,
-    onFavoriteChanged: () -> Unit // 👈 nuevo
+    loginViewModel: LoginViewModel,
+    onFavoriteChanged: () -> Unit
 ) {
     val context = LocalContext.current
     val currentUser = FirebaseAuth.getInstance().currentUser
@@ -99,6 +103,10 @@ fun FavoriteProductCard(
         context.resources.getIdentifier(product.thumbnail, "drawable", context.packageName)
     }
     var isFavorite by remember { mutableStateOf(true) }
+
+    val uiState by loginViewModel.uiState.collectAsState()
+    val isReseller = uiState.userType == "Revendedor"
+    val finalPrice = if (isReseller) product.price * 0.85 else product.price
 
     Card(
         modifier = Modifier
@@ -144,12 +152,30 @@ fun FavoriteProductCard(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(
-                        text = "$${"%.2f".format(product.price).replace('.', ',')}",
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.Black
-                    )
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            text = "$${"%.2f".format(finalPrice).replace('.', ',')}",
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.Black
+                        )
+
+                        if (isReseller) {
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Surface(
+                                color = Color(0xFF4CAF50),
+                                shape = RoundedCornerShape(4.dp),
+                                modifier = Modifier.height(20.dp)
+                            ) {
+                                Text(
+                                    text = "15% OFF",
+                                    color = Color.White,
+                                    fontSize = 10.sp,
+                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                )
+                            }
+                        }
+                    }
 
                     Surface(
                         modifier = Modifier
@@ -182,14 +208,12 @@ fun FavoriteProductCard(
                             favRef.delete()
                                 .addOnSuccessListener {
                                     isFavorite = false
-                                    println("Eliminado de favoritos")
-                                    onFavoriteChanged() // 👈 ACTUALIZA LISTA
+                                    onFavoriteChanged()
                                 }
                         } else {
                             favRef.set(product, SetOptions.merge())
                                 .addOnSuccessListener {
                                     isFavorite = true
-                                    println("Agregado a favoritos")
                                     onFavoriteChanged()
                                 }
                         }

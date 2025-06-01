@@ -21,20 +21,22 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import com.proyecto.petshopapp.R
-import com.proyecto.petshopapp.data.models.Product
-import com.proyecto.petshopapp.local.DatabaseProvider
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.SetOptions
+import com.proyecto.petshopapp.R
+import com.proyecto.petshopapp.data.models.Product
+import com.proyecto.petshopapp.local.DatabaseProvider
+import com.proyecto.petshopapp.login.LoginViewModel
 import kotlinx.coroutines.tasks.await
+import androidx.lifecycle.viewmodel.compose.viewModel
 
 @Composable
 fun ProductDetailScreen(
     product: Product,
-    navController: NavController
+    navController: NavController,
+    loginViewModel: LoginViewModel
 ) {
     var quantity by remember { mutableStateOf(1) }
     var isFavorite by remember { mutableStateOf(false) }
@@ -42,6 +44,9 @@ fun ProductDetailScreen(
     val context = LocalContext.current
     val db = remember { DatabaseProvider.provideDatabase(context) }
     val cartViewModel: CartViewModel = viewModel(factory = CartViewModel.Factory(db.cartDao()))
+
+    val uiState by loginViewModel.uiState.collectAsState()
+    val isReseller = uiState.userType == "Revendedor"
 
     val currentUser = FirebaseAuth.getInstance().currentUser
     val firestore = remember { FirebaseFirestore.getInstance() }
@@ -57,8 +62,10 @@ fun ProductDetailScreen(
             isFavorite = snapshot.exists()
         }
     }
+
     val imageId = context.resources.getIdentifier(product.thumbnail, "drawable", context.packageName)
-    val totalPrice = product.price * quantity
+    val unitPrice = if (isReseller) product.price * 0.85 else product.price
+    val totalPrice = unitPrice * quantity
 
     Column(
         modifier = Modifier
@@ -83,25 +90,13 @@ fun ProductDetailScreen(
                         .document(product.id.toString())
 
                     if (isFavorite) {
-                        // Eliminar de favoritos
                         favRef.delete()
-                            .addOnSuccessListener {
-                                isFavorite = false
-                                println("Producto eliminado de favoritos")
-                            }
-                            .addOnFailureListener { e ->
-                                println("Error al eliminar favorito: $e")
-                            }
+                            .addOnSuccessListener { isFavorite = false }
+                            .addOnFailureListener { e -> println("Error al eliminar favorito: $e") }
                     } else {
-                        // Agregar a favoritos
                         favRef.set(product, SetOptions.merge())
-                            .addOnSuccessListener {
-                                isFavorite = true
-                                println("Producto agregado a favoritos")
-                            }
-                            .addOnFailureListener { e ->
-                                println("Error al agregar favorito: $e")
-                            }
+                            .addOnSuccessListener { isFavorite = true }
+                            .addOnFailureListener { e -> println("Error al agregar favorito: $e") }
                     }
                 }
             }) {
@@ -148,11 +143,29 @@ fun ProductDetailScreen(
                 }
             }
 
-            Text(
-                "$${"%.2f".format(totalPrice).replace('.', ',')}",
-                fontWeight = FontWeight.Bold,
-                fontSize = 20.sp
-            )
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    "$${"%.2f".format(totalPrice).replace('.', ',')}",
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 20.sp
+                )
+
+                if (isReseller) {
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Surface(
+                        color = Color(0xFF4CAF50),
+                        shape = RoundedCornerShape(4.dp),
+                        modifier = Modifier.height(20.dp)
+                    ) {
+                        Text(
+                            text = "15% OFF",
+                            color = Color.White,
+                            fontSize = 10.sp,
+                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                        )
+                    }
+                }
+            }
         }
 
         Spacer(modifier = Modifier.height(24.dp))

@@ -23,15 +23,24 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.proyecto.petshopapp.R
 import com.proyecto.petshopapp.local.DatabaseProvider
+import com.proyecto.petshopapp.login.LoginViewModel
 
 @Composable
-fun CartScreen(navController: NavController) {
+fun CartScreen(navController: NavController, loginViewModel: LoginViewModel) {
     val context = LocalContext.current
     val db = remember { DatabaseProvider.provideDatabase(context) }
     val cartViewModel: CartViewModel = viewModel(factory = CartViewModel.Factory(db.cartDao()))
 
+    val uiState by loginViewModel.uiState.collectAsState()
+    val isReseller = uiState.userType == "Revendedor"
+
     val cartItems = cartViewModel.cartItems.collectAsState().value
-    val subtotal = cartItems.sumOf { it.price * it.quantity }
+
+    // Calcular precios con descuento aplicado si corresponde
+    val subtotal = cartItems.sumOf {
+        val finalPrice = if (isReseller) it.price * 0.85 else it.price
+        finalPrice * it.quantity
+    }
     val tax = subtotal * 0.10
     val total = subtotal + tax
 
@@ -85,11 +94,33 @@ fun CartScreen(navController: NavController) {
                             color = Color.Gray
                         )
                         Text("Qty: ${product.quantity}", fontSize = 12.sp, color = Color.Gray)
-                        Text(
-                            "$${"%.2f".format(product.price * product.quantity).replace('.', ',')}",
-                            color = Color(0xFF8B5CF6),
-                            fontWeight = FontWeight.Bold
-                        )
+
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            val finalPrice = if (isReseller) product.price * 0.85 else product.price
+                            val totalItemPrice = finalPrice * product.quantity
+
+                            Text(
+                                "$${"%.2f".format(totalItemPrice).replace('.', ',')}",
+                                color = Color(0xFF8B5CF6),
+                                fontWeight = FontWeight.Bold
+                            )
+
+                            if (isReseller) {
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Surface(
+                                    color = Color(0xFF4CAF50),
+                                    shape = RoundedCornerShape(4.dp),
+                                    modifier = Modifier.height(20.dp)
+                                ) {
+                                    Text(
+                                        text = "15% OFF",
+                                        color = Color.White,
+                                        fontSize = 10.sp,
+                                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                    )
+                                }
+                            }
+                        }
                     }
 
                     IconButton(onClick = { cartViewModel.removeFromCart(product) }) {

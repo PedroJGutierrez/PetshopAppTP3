@@ -80,19 +80,24 @@ fun HomeScreen(navController: NavController, loginViewModel: LoginViewModel) {
         ) {
             Spacer(modifier = Modifier.height(16.dp))
 
-            Surface(
-                color = PurplePrimary,
-                shape = RoundedCornerShape(16.dp),
-                modifier = Modifier
-                    .padding(horizontal = 16.dp)
-                    .fillMaxWidth()
-            ) {
-                Text(
-                    text = "Tipo de usuario: $userType",
-                    color = Color.White,
-                    modifier = Modifier.padding(12.dp),
-                    fontSize = 14.sp
-                )
+            if (userType == "Revendedor") {
+                Surface(
+                    color = Color(0xFF4CAF50), // verde
+                    shape = RoundedCornerShape(16.dp),
+                    modifier = Modifier
+                        .padding(horizontal = 16.dp)
+                        .fillMaxWidth()
+                ) {
+                    Text(
+                        text = "Wholesale Discounts",
+                        color = Color.White,
+                        modifier = Modifier.padding(12.dp),
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
             }
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -115,7 +120,8 @@ fun HomeScreen(navController: NavController, loginViewModel: LoginViewModel) {
             )
 
             Spacer(modifier = Modifier.height(24.dp))
-            BestSellerSection(products = filteredProducts, navController = navController)
+            BestSellerSection(products = filteredProducts, navController = navController, loginViewModel = loginViewModel)
+
 
             Spacer(modifier = Modifier.height(32.dp))
 
@@ -368,29 +374,13 @@ fun CategoryChip(
 }
 
 @Composable
-fun BestSellerSection(products: List<Product>, navController: NavController) {
+fun BestSellerSection(
+    products: List<Product>,
+    navController: NavController,
+    loginViewModel: LoginViewModel
+) {
     Column(modifier = Modifier.padding(horizontal = 16.dp)) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                text = "Best Seller",
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color.Black
-            )
-            TextButton(onClick = { }) {
-                Text(
-                    text = "View All",
-                    color = Color(0xFF8B5CF6)
-                )
-            }
-        }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
+        // ...
         LazyVerticalGrid(
             columns = GridCells.Fixed(2),
             horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -398,18 +388,23 @@ fun BestSellerSection(products: List<Product>, navController: NavController) {
             modifier = Modifier.height(300.dp)
         ) {
             items(products) { product ->
-                ProductCard(product = product, navController = navController)
+                ProductCard(product = product, navController = navController, loginViewModel = loginViewModel)
             }
         }
     }
 }
 
+
 @Composable
-fun ProductCard(product: Product, navController: NavController) {
+fun ProductCard(product: Product, navController: NavController, loginViewModel: LoginViewModel) {
     val context = LocalContext.current
     val imageId = remember(product.thumbnail) {
         context.resources.getIdentifier(product.thumbnail, "drawable", context.packageName)
     }
+
+    val uiState by loginViewModel.uiState.collectAsState()
+    val isReseller = uiState.userType == "Revendedor"
+    val discountedPrice = if (isReseller) product.price * 0.85 else product.price
 
     Card(
         modifier = Modifier
@@ -425,7 +420,6 @@ fun ProductCard(product: Product, navController: NavController) {
                 .padding(12.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Imagen del producto (centrada y alargada)
             Image(
                 painter = painterResource(
                     id = if (imageId != 0) imageId else R.drawable.banner_product
@@ -440,7 +434,6 @@ fun ProductCard(product: Product, navController: NavController) {
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // Título
             Text(
                 text = product.title,
                 fontSize = 12.sp,
@@ -452,18 +445,35 @@ fun ProductCard(product: Product, navController: NavController) {
 
             Spacer(modifier = Modifier.height(4.dp))
 
-            // Precio y botón
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    text = "$${String.format("%.2f", product.price)}".replace('.', ','),
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.Black
-                )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = "$${String.format("%.2f", discountedPrice).replace('.', ',')}",
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.Black
+                    )
+
+                    if (isReseller) {
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Surface(
+                            color = Color(0xFF4CAF50),
+                            shape = RoundedCornerShape(4.dp),
+                            modifier = Modifier.height(20.dp)
+                        ) {
+                            Text(
+                                text = "15% OFF",
+                                color = Color.White,
+                                fontSize = 10.sp,
+                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                            )
+                        }
+                    }
+                }
 
                 Surface(
                     modifier = Modifier
@@ -485,6 +495,7 @@ fun ProductCard(product: Product, navController: NavController) {
         }
     }
 }
+
 
 
 @Composable
@@ -589,7 +600,7 @@ fun BottomNavigationBar(
                 BottomNavItem(
                     icon = Icons.Default.Favorite,
                     isSelected = false,
-                    onClick = { },
+                    onClick = { navController.navigate("favorites") },
                     label = "Favorites"
                 )
                 BottomNavItem(
