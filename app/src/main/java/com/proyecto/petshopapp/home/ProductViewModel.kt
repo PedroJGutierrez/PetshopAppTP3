@@ -24,14 +24,48 @@ class ProductViewModel : ViewModel() {
                     title = "RC Kitten",
                     price = 20.99,
                     thumbnail = "kitten",
-                    description = "ROYAL CANIN® Kitten is specially formulated to support the unique nutritional needs of growing kittens. During this crucial stage of development, kittens need a diet rich in nutrients to help build strong immune defenses, support healthy growth, and promote digestive health. That’s why ROYAL CANIN® Kitten contains an exclusive blend of antioxidants, highly digestible proteins, and essential vitamins and minerals to support a kitten’s natural defenses, optimal development, and overall well-being."
+                    description = "ROYAL CANIN® Kitten is specially formulated to support the unique nutritional needs of growing kittens...",
+                    category = "Food"
                 ),
                 Product(
                     id = 1002,
                     title = "RC Persian",
                     price = 22.99,
                     thumbnail = "persian",
-                    description = "The Persian cat has the longest and densest coat of all cat breeds. This means that it typically needs to consume more skin-health focused nutrients than other cat breeds. That’s why ROYAL CANIN® Persian Adult contains an exclusive complex of nutrients to help the skin’s barrier defence role to maintain good skin and coat health."
+                    description = "The Persian cat has the longest and densest coat of all cat breeds...",
+                    category = "Food"
+                ),
+                Product(
+                    id = 1003,
+                    title = "Ball with rope",
+                    price = 8.99,
+                    thumbnail = "toy_perro",
+                    description = "The rope ball dog toy features multiple textured surfaces and durable twisted fibers...",
+                    category = "Toys"
+                ),
+                Product(
+                    id = 1004,
+                    title = "Rod with fish",
+                    price = 10.99,
+                    thumbnail = "toy_gato",
+                    description = "The fishing rod cat toy features a long flexible wand and dangling prey-like attachment...",
+                    category = "Toys"
+                ),
+                Product(
+                    id = 1005,
+                    title = "Dog harness",
+                    price = 18.99,
+                    thumbnail = "pretal_perro",
+                    description = "The dog harness features a chest-distributed pressure system and padded straps...",
+                    category = "Accessories"
+                ),
+                Product(
+                    id = 1006,
+                    title = "Cat bun",
+                    price = 12.99,
+                    thumbnail = "moño-gato",
+                    description = "The cat bow tie features an adjustable elastic collar and lightweight fabric design...",
+                    category = "Accessories"
                 )
             )
         }

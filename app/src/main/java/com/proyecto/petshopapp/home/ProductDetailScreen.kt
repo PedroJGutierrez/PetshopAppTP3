@@ -26,6 +26,10 @@ import androidx.navigation.NavController
 import com.proyecto.petshopapp.R
 import com.proyecto.petshopapp.data.models.Product
 import com.proyecto.petshopapp.local.DatabaseProvider
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.SetOptions
+import kotlinx.coroutines.tasks.await
 
 @Composable
 fun ProductDetailScreen(
@@ -39,6 +43,20 @@ fun ProductDetailScreen(
     val db = remember { DatabaseProvider.provideDatabase(context) }
     val cartViewModel: CartViewModel = viewModel(factory = CartViewModel.Factory(db.cartDao()))
 
+    val currentUser = FirebaseAuth.getInstance().currentUser
+    val firestore = remember { FirebaseFirestore.getInstance() }
+
+    LaunchedEffect(product.id) {
+        currentUser?.let { user ->
+            val favRef = firestore.collection("users")
+                .document(user.uid)
+                .collection("favoritos")
+                .document(product.id.toString())
+
+            val snapshot = favRef.get().await()
+            isFavorite = snapshot.exists()
+        }
+    }
     val imageId = context.resources.getIdentifier(product.thumbnail, "drawable", context.packageName)
     val totalPrice = product.price * quantity
 
@@ -57,7 +75,36 @@ fun ProductDetailScreen(
                 Icon(Icons.Default.ArrowBack, contentDescription = "Back")
             }
             Text("Product Detail", fontWeight = FontWeight.Bold)
-            IconButton(onClick = { isFavorite = !isFavorite }) {
+            IconButton(onClick = {
+                currentUser?.let { user ->
+                    val favRef = firestore.collection("users")
+                        .document(user.uid)
+                        .collection("favoritos")
+                        .document(product.id.toString())
+
+                    if (isFavorite) {
+                        // Eliminar de favoritos
+                        favRef.delete()
+                            .addOnSuccessListener {
+                                isFavorite = false
+                                println("Producto eliminado de favoritos")
+                            }
+                            .addOnFailureListener { e ->
+                                println("Error al eliminar favorito: $e")
+                            }
+                    } else {
+                        // Agregar a favoritos
+                        favRef.set(product, SetOptions.merge())
+                            .addOnSuccessListener {
+                                isFavorite = true
+                                println("Producto agregado a favoritos")
+                            }
+                            .addOnFailureListener { e ->
+                                println("Error al agregar favorito: $e")
+                            }
+                    }
+                }
+            }) {
                 Icon(
                     imageVector = Icons.Default.Favorite,
                     contentDescription = "Fav",

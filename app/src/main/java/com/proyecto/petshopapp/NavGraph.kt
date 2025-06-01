@@ -61,6 +61,9 @@ fun NavigationGraph(
                 }
             }
         }
+        composable("favorites") {
+            FavoritesScreen(navController)
+        }
         composable("cart") {
             CartScreen(navController)
         }

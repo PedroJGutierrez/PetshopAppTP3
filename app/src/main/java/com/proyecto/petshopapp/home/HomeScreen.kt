@@ -37,7 +37,6 @@ import androidx.compose.ui.zIndex
 import androidx.navigation.NavController
 import com.google.firebase.auth.FirebaseAuth
 import com.proyecto.petshopapp.R
-import com.proyecto.petshopapp.components.fakeProducts
 import com.proyecto.petshopapp.data.models.Product
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.proyecto.petshopapp.home.ProductViewModel
@@ -50,7 +49,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 @Composable
 fun HomeScreen(navController: NavController, loginViewModel: LoginViewModel) {
     var selectedLocation by remember { mutableStateOf("Buenos Aires") }
-    var selectedCategory by remember { mutableStateOf("Food") }
+    var selectedCategory by remember { mutableStateOf("All") }
     var showLocationModal by remember { mutableStateOf(false) }
     var showCategoryModal by remember { mutableStateOf(false) }
 
@@ -66,6 +65,12 @@ fun HomeScreen(navController: NavController, loginViewModel: LoginViewModel) {
         (context as? android.app.Activity)?.moveTaskToBack(true)
     }
 
+    val filteredProducts = if (selectedCategory == "All") {
+        products
+    } else {
+        products.filter { it.category.equals(selectedCategory, ignoreCase = true) }
+    }
+
     Box(modifier = Modifier.fillMaxSize()) {
         Column(
             modifier = Modifier
@@ -75,7 +80,6 @@ fun HomeScreen(navController: NavController, loginViewModel: LoginViewModel) {
         ) {
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Cuadro violeta con tipo de usuario
             Surface(
                 color = PurplePrimary,
                 shape = RoundedCornerShape(16.dp),
@@ -105,13 +109,13 @@ fun HomeScreen(navController: NavController, loginViewModel: LoginViewModel) {
 
             CategorySection(
                 selectedCategory = selectedCategory,
-                categories = listOf("Food", "Toys", "Accessories"),
+                categories = listOf("All", "Food", "Toys", "Accessories"),
                 onCategorySelect = { selectedCategory = it },
                 onViewAllClick = { showCategoryModal = true }
             )
 
             Spacer(modifier = Modifier.height(24.dp))
-            BestSellerSection(products = products, navController = navController)
+            BestSellerSection(products = filteredProducts, navController = navController)
 
             Spacer(modifier = Modifier.height(32.dp))
 
@@ -162,7 +166,7 @@ fun HomeScreen(navController: NavController, loginViewModel: LoginViewModel) {
             modifier = Modifier.zIndex(1f)
         ) {
             CategoryModal(
-                categories = listOf("Food", "Toys", "Accessories"),
+                categories = listOf("All", "Food", "Toys", "Accessories"),
                 selectedCategory = selectedCategory,
                 onCategorySelect = {
                     selectedCategory = it
@@ -540,7 +544,7 @@ fun BottomNavigationBar(
                     BottomNavItem(
                         icon = Icons.Default.Favorite,
                         isSelected = false,
-                        onClick = { },
+                        onClick = { navController.navigate("favorites") },
                         label = "Favorites"
                     )
                     BottomNavItem(

@@ -1,11 +1,11 @@
 package com.proyecto.petshopapp.data.models
 
 data class Product(
-    val id: Int,
-    val title: String,
-    val price: Double,
-    val thumbnail: String,
-    val description: String,
+    val id: Int = 0,
+    val title: String = "",
+    val price: Double = 0.0,
+    val thumbnail: String = "",
+    val description: String = "",
     val discountPercentage: Double = 0.0,
     val rating: Double = 0.0,
     val stock: Int = 0,
