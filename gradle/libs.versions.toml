@@ -21,8 +21,8 @@ hiltNavigationCompose = "1.2.0"
 room = "2.6.1"
 firebase-bom = "32.7.0"
 firebaseAuthKtx = "23.2.1"
-
-
+firebase-firestore = "24.10.3"
+compose-material-icons = "1.6.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -57,6 +57,8 @@ room-compiler = { module = "androidx.room:room-compiler", version.ref = "room" }
 firebase-auth = { module = "com.google.firebase:firebase-auth-ktx", version.ref = "firebase-bom" }
 firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebase-bom" }
 firebase-auth-ktx = { group = "com.google.firebase", name = "firebase-auth-ktx", version.ref = "firebaseAuthKtx" }
+firebase-firestore-ktx = { module = "com.google.firebase:firebase-firestore-ktx", version.ref = "firebase-firestore" }
+material-icons-extended = { module = "androidx.compose.material:material-icons-extended", version.ref = "compose-material-icons" }
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }

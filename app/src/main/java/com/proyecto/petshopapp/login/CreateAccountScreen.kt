@@ -2,6 +2,9 @@ package com.proyecto.petshopapp.login
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -9,11 +12,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.UserProfileChangeRequest
+import com.google.firebase.firestore.ktx.firestore
+import com.google.firebase.ktx.Firebase
 import com.proyecto.petshopapp.ui.theme.PurplePrimary
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -24,6 +30,12 @@ fun CreateAccountScreen(navController: NavController) {
     var password by remember { mutableStateOf("") }
     var confirmPassword by remember { mutableStateOf("") }
 
+    var passwordVisible by remember { mutableStateOf(false) }
+    var confirmPasswordVisible by remember { mutableStateOf(false) }
+
+    val userTypes = listOf("Usuario final", "Revendedor")
+    var selectedUserType by remember { mutableStateOf(userTypes[0]) }
+
     var showUsernameError by remember { mutableStateOf(false) }
     var showEmailError by remember { mutableStateOf(false) }
     var showPasswordError by remember { mutableStateOf(false) }
@@ -32,6 +44,7 @@ fun CreateAccountScreen(navController: NavController) {
     var isLoading by remember { mutableStateOf(false) }
 
     val auth = remember { FirebaseAuth.getInstance() }
+    val db = Firebase.firestore
 
     Column(
         modifier = Modifier
@@ -62,7 +75,6 @@ fun CreateAccountScreen(navController: NavController) {
                 errorBorderColor = Color.Red
             )
         )
-
         if (showUsernameError) Text("Username is required", color = Color.Red, fontSize = 12.sp)
         Spacer(modifier = Modifier.height(16.dp))
 
@@ -81,7 +93,6 @@ fun CreateAccountScreen(navController: NavController) {
                 errorBorderColor = Color.Red
             )
         )
-
         if (showEmailError) Text("Email is required", color = Color.Red, fontSize = 12.sp)
         Spacer(modifier = Modifier.height(16.dp))
 
@@ -92,7 +103,13 @@ fun CreateAccountScreen(navController: NavController) {
                 showPasswordError = false
             },
             label = { Text("Password") },
-            visualTransformation = PasswordVisualTransformation(),
+            visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+            trailingIcon = {
+                val icon = if (passwordVisible) Icons.Filled.VisibilityOff else Icons.Filled.Visibility
+                IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                    Icon(imageVector = icon, contentDescription = null)
+                }
+            },
             isError = showPasswordError,
             modifier = Modifier.fillMaxWidth(),
             colors = OutlinedTextFieldDefaults.colors(
@@ -100,7 +117,6 @@ fun CreateAccountScreen(navController: NavController) {
                 errorBorderColor = Color.Red
             )
         )
-
         if (showPasswordError) Text("Password is required", color = Color.Red, fontSize = 12.sp)
         Spacer(modifier = Modifier.height(16.dp))
 
@@ -111,7 +127,13 @@ fun CreateAccountScreen(navController: NavController) {
                 showConfirmPasswordError = false
             },
             label = { Text("Confirm Password") },
-            visualTransformation = PasswordVisualTransformation(),
+            visualTransformation = if (confirmPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+            trailingIcon = {
+                val icon = if (confirmPasswordVisible) Icons.Filled.VisibilityOff else Icons.Filled.Visibility
+                IconButton(onClick = { confirmPasswordVisible = !confirmPasswordVisible }) {
+                    Icon(imageVector = icon, contentDescription = null)
+                }
+            },
             isError = showConfirmPasswordError,
             modifier = Modifier.fillMaxWidth(),
             colors = OutlinedTextFieldDefaults.colors(
@@ -119,8 +141,15 @@ fun CreateAccountScreen(navController: NavController) {
                 errorBorderColor = Color.Red
             )
         )
-
         if (showConfirmPasswordError) Text("Passwords must match", color = Color.Red, fontSize = 12.sp)
+
+        Spacer(modifier = Modifier.height(16.dp))
+        Text("Tipo de usuario", fontWeight = FontWeight.SemiBold)
+        UserTypeSelector(
+            options = userTypes,
+            selectedOption = selectedUserType,
+            onOptionSelected = { selectedUserType = it }
+        )
 
         errorMessage?.let {
             Spacer(modifier = Modifier.height(8.dp))
@@ -131,31 +160,47 @@ fun CreateAccountScreen(navController: NavController) {
 
         Button(
             onClick = {
-                showUsernameError = username.isEmpty()
-                showEmailError = email.isEmpty()
-                showPasswordError = password.isEmpty()
+                showUsernameError = username.isBlank()
+                showEmailError = email.isBlank()
+                showPasswordError = password.isBlank()
                 showConfirmPasswordError = password != confirmPassword
 
                 if (!showUsernameError && !showEmailError && !showPasswordError && !showConfirmPasswordError) {
                     isLoading = true
-                    auth.createUserWithEmailAndPassword(email, password)
-                        .addOnCompleteListener { task ->
-                            isLoading = false
-                            if (task.isSuccessful) {
-                                val user = auth.currentUser
-                                val profileUpdates = UserProfileChangeRequest.Builder()
-                                    .setDisplayName(username)
-                                    .build()
+                    errorMessage = null
 
-                                user?.updateProfile(profileUpdates)?.addOnCompleteListener {
-                                    user.sendEmailVerification()
-                                    navController.navigate("login") {
-                                        popUpTo("create_account") { inclusive = true }
+                    auth.createUserWithEmailAndPassword(email, password)
+                        .addOnSuccessListener { result ->
+                            val user = result.user
+                            val profileUpdates = UserProfileChangeRequest.Builder()
+                                .setDisplayName(username)
+                                .build()
+
+                            user?.updateProfile(profileUpdates)?.addOnCompleteListener {
+                                val userData = hashMapOf(
+                                    "uid" to user.uid,
+                                    "username" to username,
+                                    "email" to email,
+                                    "userType" to selectedUserType
+                                )
+
+                                Firebase.firestore.collection("users").document(user.uid)
+                                    .set(userData)
+                                    .addOnSuccessListener {
+                                        isLoading = false
+                                        navController.navigate("login") {
+                                            popUpTo("create_account") { inclusive = true }
+                                        }
                                     }
-                                }
-                            } else {
-                                errorMessage = task.exception?.message ?: "Error creating account"
+                                    .addOnFailureListener { e ->
+                                        isLoading = false
+                                        errorMessage = "Error al guardar en Firestore: ${e.message}"
+                                    }
                             }
+                        }
+                        .addOnFailureListener { e ->
+                            isLoading = false
+                            errorMessage = "Error creando cuenta: ${e.message}"
                         }
                 }
             },
@@ -177,6 +222,37 @@ fun CreateAccountScreen(navController: NavController) {
 
         TextButton(onClick = { navController.navigate("login") }) {
             Text("Have an account? Login", color = Color.Gray, fontSize = 14.sp)
+        }
+    }
+}
+
+@Composable
+fun UserTypeSelector(
+    options: List<String>,
+    selectedOption: String,
+    onOptionSelected: (String) -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp),
+        horizontalArrangement = Arrangement.SpaceEvenly
+    ) {
+        options.forEach { option ->
+            Button(
+                onClick = { onOptionSelected(option) },
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = if (option == selectedOption) PurplePrimary else Color.LightGray,
+                    contentColor = Color.White
+                ),
+                shape = RoundedCornerShape(50),
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(horizontal = 4.dp)
+                    .height(45.dp)
+            ) {
+                Text(option, fontSize = 14.sp)
+            }
         }
     }
 }

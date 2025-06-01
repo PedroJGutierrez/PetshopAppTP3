@@ -1,5 +1,7 @@
 package com.proyecto.petshopapp.home
 
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
@@ -39,19 +41,30 @@ import com.proyecto.petshopapp.components.fakeProducts
 import com.proyecto.petshopapp.data.models.Product
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.proyecto.petshopapp.home.ProductViewModel
+import com.proyecto.petshopapp.login.LoginViewModel
+import com.proyecto.petshopapp.ui.theme.PurplePrimary
+import androidx.compose.material.icons.outlined.LocalShipping
+import androidx.compose.ui.graphics.vector.ImageVector
+
 
 @Composable
-fun HomeScreen(navController: NavController) {
-    var selectedLocation by remember { mutableStateOf("Jebres, Surakarta") }
+fun HomeScreen(navController: NavController, loginViewModel: LoginViewModel) {
+    var selectedLocation by remember { mutableStateOf("Buenos Aires") }
     var selectedCategory by remember { mutableStateOf("Food") }
     var showLocationModal by remember { mutableStateOf(false) }
     var showCategoryModal by remember { mutableStateOf(false) }
 
-    val categories = listOf("Food", "Toys", "Accessories")
-    val locations = listOf("Buenos Aires")
+    val uiState by loginViewModel.uiState.collectAsState()
+    val userType = uiState.userType ?: "Usuario"
 
     val productViewModel: ProductViewModel = viewModel()
     val products by productViewModel.products.collectAsState()
+
+    val context = LocalContext.current
+
+    BackHandler {
+        (context as? android.app.Activity)?.moveTaskToBack(true)
+    }
 
     Box(modifier = Modifier.fillMaxSize()) {
         Column(
@@ -60,7 +73,25 @@ fun HomeScreen(navController: NavController) {
                 .background(Color.White)
                 .verticalScroll(rememberScrollState())
         ) {
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Cuadro violeta con tipo de usuario
+            Surface(
+                color = PurplePrimary,
+                shape = RoundedCornerShape(16.dp),
+                modifier = Modifier
+                    .padding(horizontal = 16.dp)
+                    .fillMaxWidth()
+            ) {
+                Text(
+                    text = "Tipo de usuario: $userType",
+                    color = Color.White,
+                    modifier = Modifier.padding(12.dp),
+                    fontSize = 14.sp
+                )
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
 
             HeaderSection(
                 location = selectedLocation,
@@ -74,13 +105,13 @@ fun HomeScreen(navController: NavController) {
 
             CategorySection(
                 selectedCategory = selectedCategory,
-                categories = categories,
+                categories = listOf("Food", "Toys", "Accessories"),
                 onCategorySelect = { selectedCategory = it },
                 onViewAllClick = { showCategoryModal = true }
             )
 
             Spacer(modifier = Modifier.height(24.dp))
-            BestSellerSection(products = products, navController )
+            BestSellerSection(products = products, navController = navController)
 
             Spacer(modifier = Modifier.height(32.dp))
 
@@ -103,6 +134,7 @@ fun HomeScreen(navController: NavController) {
 
         BottomNavigationBar(
             navController = navController,
+            viewModel = loginViewModel,
             modifier = Modifier.align(Alignment.BottomCenter)
         )
 
@@ -113,7 +145,7 @@ fun HomeScreen(navController: NavController) {
             modifier = Modifier.zIndex(1f)
         ) {
             LocationModal(
-                locations = locations,
+                locations = listOf("Buenos Aires"),
                 selectedLocation = selectedLocation,
                 onLocationSelect = {
                     selectedLocation = it
@@ -130,7 +162,7 @@ fun HomeScreen(navController: NavController) {
             modifier = Modifier.zIndex(1f)
         ) {
             CategoryModal(
-                categories = categories,
+                categories = listOf("Food", "Toys", "Accessories"),
                 selectedCategory = selectedCategory,
                 onCategorySelect = {
                     selectedCategory = it
@@ -141,7 +173,6 @@ fun HomeScreen(navController: NavController) {
         }
     }
 }
-
 
 @Composable
 fun HeaderSection(
@@ -453,55 +484,166 @@ fun ProductCard(product: Product, navController: NavController) {
 
 
 @Composable
-fun BottomNavigationBar(navController: NavController, modifier: Modifier = Modifier) {
-    Surface(
-        modifier = modifier.fillMaxWidth(),
-        color = Color.White,
-        shadowElevation = 8.dp
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 12.dp, horizontal = 32.dp),
-            horizontalArrangement = Arrangement.SpaceEvenly
+fun BottomNavigationBar(
+    navController: NavController,
+    modifier: Modifier = Modifier,
+    viewModel: LoginViewModel
+) {
+    val uiState by viewModel.uiState.collectAsState()
+    val userType = uiState.userType ?: "Usuario"
+
+    if (userType == "Revendedor") {
+        var expanded by remember { mutableStateOf(false) }
+
+        Column(modifier = modifier.fillMaxWidth()) {
+            AnimatedVisibility(visible = expanded) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 32.dp)
+                        .background(Color.White),
+                    horizontalArrangement = Arrangement.SpaceEvenly
+                ) {
+                    BottomNavItem(
+                        icon = Icons.Default.History,
+                        isSelected = false,
+                        onClick = { /* TODO: Historial */ },
+                        label = "Records"
+                    )
+                    BottomNavItem(
+                        icon = Icons.Outlined.LocalShipping,
+                        isSelected = false,
+                        onClick = { /* TODO: Gestión pedidos */ },
+                        label = "Orders"
+                    )
+                }
+            }
+
+            Surface(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(Color.White),
+                shadowElevation = 8.dp
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 12.dp, horizontal = 32.dp),
+                    horizontalArrangement = Arrangement.SpaceEvenly
+                ) {
+                    BottomNavItem(
+                        icon = Icons.Default.Home,
+                        isSelected = true,
+                        onClick = { },
+                        label = "Home Page"
+                    )
+                    BottomNavItem(
+                        icon = Icons.Default.Favorite,
+                        isSelected = false,
+                        onClick = { },
+                        label = "Favorites"
+                    )
+                    BottomNavItem(
+                        icon = Icons.Default.ShoppingCart,
+                        isSelected = false,
+                        onClick = { navController.navigate("cart") },
+                        label = "Cart"
+                    )
+                    BottomNavItem(
+                        icon = Icons.Default.Person,
+                        isSelected = false,
+                        onClick = { },
+                        label = "Profile"
+                    )
+                    BottomNavItem(
+                        icon = if (expanded) Icons.Default.KeyboardArrowDown else Icons.Default.KeyboardArrowUp,
+                        isSelected = false,
+                        onClick = { expanded = !expanded },
+                        label = if (expanded) "Collapse" else "Expand"
+                    )
+                }
+            }
+        }
+    } else {
+        Surface(
+            modifier = modifier.fillMaxWidth(),
+            color = Color.White,
+            shadowElevation = 8.dp
         ) {
-            BottomNavItem(
-                icon = Icons.Default.Home,
-                isSelected = true,
-                onClick = { }
-            )
-            BottomNavItem(
-                icon = Icons.Default.Favorite,
-                isSelected = false,
-                onClick = { }
-            )
-            BottomNavItem(
-                icon = Icons.Default.ShoppingCart,
-                isSelected = false,
-                onClick = { navController.navigate("cart") }
-            )
-            BottomNavItem(
-                icon = Icons.Default.Person,
-                isSelected = false,
-                onClick = { }
-            )
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 12.dp, horizontal = 32.dp),
+                horizontalArrangement = Arrangement.SpaceEvenly
+            ) {
+                BottomNavItem(
+                    icon = Icons.Default.Home,
+                    isSelected = true,
+                    onClick = { },
+                    label = "Home Page"
+                )
+                BottomNavItem(
+                    icon = Icons.Default.Favorite,
+                    isSelected = false,
+                    onClick = { },
+                    label = "Favorites"
+                )
+                BottomNavItem(
+                    icon = Icons.Default.ShoppingCart,
+                    isSelected = false,
+                    onClick = { navController.navigate("cart") },
+                    label = "Cart"
+                )
+                BottomNavItem(
+                    icon = Icons.Default.Person,
+                    isSelected = false,
+                    onClick = { },
+                    label = "Profile"
+                )
+            }
         }
     }
 }
 
+
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BottomNavItem(
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    icon: ImageVector,
     isSelected: Boolean,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    label: String
 ) {
-    IconButton(onClick = onClick) {
-        Icon(
-            imageVector = icon,
-            contentDescription = null,
-            tint = if (isSelected) Color(0xFF8B5CF6) else Color.Gray,
-            modifier = Modifier.size(24.dp)
-        )
+    val tooltipState = rememberTooltipState()
+
+    TooltipBox(
+        positionProvider = TooltipDefaults.rememberPlainTooltipPositionProvider(),
+        tooltip = {
+            Surface(
+                shape = RoundedCornerShape(4.dp),
+                color = Color.DarkGray
+            ) {
+                Text(
+                    text = label,
+                    modifier = Modifier.padding(8.dp),
+                    color = Color.White,
+                    fontSize = 12.sp
+                )
+            }
+        },
+        state = tooltipState,
+        modifier = Modifier
+    ) {
+        IconButton(
+            onClick = onClick
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = label,
+                tint = if (isSelected) Color(0xFF8B5CF6) else Color.Gray,
+                modifier = Modifier.size(24.dp)
+            )
+        }
     }
 }
 

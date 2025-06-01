@@ -1,22 +1,24 @@
 package com.proyecto.petshopapp.login
 
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.ktx.firestore
+import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.launch
 
 data class LoginUiState(
     val isLoading: Boolean = false,
     val isSuccess: Boolean = false,
     val errorMessage: String? = null,
-    val userEmail: String? = null
+    val userEmail: String? = null,
+    val userType: String? = null
 )
 
 class LoginViewModel : ViewModel() {
     private val firebaseAuth = FirebaseAuth.getInstance()
+    private val db = Firebase.firestore
 
     private val _uiState = MutableStateFlow(LoginUiState())
     val uiState: StateFlow<LoginUiState> = _uiState.asStateFlow()
@@ -28,18 +30,25 @@ class LoginViewModel : ViewModel() {
             .addOnCompleteListener { task ->
                 if (task.isSuccessful) {
                     val user = firebaseAuth.currentUser
-                    if (user != null && user.isEmailVerified) {
-                        _uiState.value = _uiState.value.copy(
-                            isLoading = false,
-                            isSuccess = true,
-                            userEmail = user.email
-                        )
-                    } else {
-                        firebaseAuth.signOut() // Previene que accedan sin verificar
-                        _uiState.value = _uiState.value.copy(
-                            isLoading = false,
-                            errorMessage = "Please verify your email before logging in."
-                        )
+                    user?.let {
+                        // 🔽 Esperamos a que se obtenga el userType ANTES de cambiar el estado a isSuccess
+                        db.collection("users").document(user.uid).get()
+                            .addOnSuccessListener { document ->
+                                val userType = document.getString("userType") ?: "Usuario Final"
+                                _uiState.value = LoginUiState(
+                                    isLoading = false,
+                                    isSuccess = true,
+                                    userEmail = user.email,
+                                    userType = userType
+                                )
+                            }
+                            .addOnFailureListener {
+                                _uiState.value = LoginUiState(
+                                    isLoading = false,
+                                    isSuccess = false,
+                                    errorMessage = "Error al obtener tipo de usuario"
+                                )
+                            }
                     }
                 } else {
                     _uiState.value = _uiState.value.copy(
@@ -52,5 +61,24 @@ class LoginViewModel : ViewModel() {
 
     fun clearError() {
         _uiState.value = _uiState.value.copy(errorMessage = null)
+    }
+    fun fetchUserType(uid: String) {
+        _uiState.value = _uiState.value.copy(isLoading = true)
+        db.collection("users").document(uid).get()
+            .addOnSuccessListener { document ->
+                val userType = document.getString("userType") ?: "Usuario Final"
+
+                _uiState.value = _uiState.value.copy(
+                    isLoading = false,
+                    userType = userType,
+                    isSuccess = true
+                )
+            }
+            .addOnFailureListener {
+                _uiState.value = _uiState.value.copy(
+                    isLoading = false,
+                    errorMessage = "Error al obtener tipo de usuario"
+                )
+            }
     }
 }

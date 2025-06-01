@@ -1,8 +1,13 @@
 package com.proyecto.petshopapp
 
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -15,6 +20,7 @@ import com.proyecto.petshopapp.login.*
 @Composable
 fun NavigationGraph(
     navController: NavHostController,
+    loginViewModel: LoginViewModel,
     startDestination: String = "onboarding"
 ) {
     val productViewModel: ProductViewModel = viewModel()
@@ -42,7 +48,18 @@ fun NavigationGraph(
             NotificationScreen(navController)
         }
         composable("home") {
-            HomeScreen(navController)
+            val uiState = loginViewModel.uiState.collectAsState()
+
+            if (uiState.value.userType != null) {
+                HomeScreen(navController = navController, loginViewModel = loginViewModel)
+            } else {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator()
+                }
+            }
         }
         composable("cart") {
             CartScreen(navController)
