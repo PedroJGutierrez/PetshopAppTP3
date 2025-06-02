@@ -40,6 +40,8 @@ fun ProductDetailScreen(
 ) {
     var quantity by remember { mutableStateOf(1) }
     var isFavorite by remember { mutableStateOf(false) }
+    var selectedColor by remember { mutableStateOf("Color") }
+    var expanded by remember { mutableStateOf(false) }
 
     val context = LocalContext.current
     val db = remember { DatabaseProvider.provideDatabase(context) }
@@ -162,6 +164,39 @@ fun ProductDetailScreen(
                             color = Color.White,
                             fontSize = 10.sp,
                             modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                        )
+                    }
+                }
+            }
+        }
+
+        // MOSTRAR SELECTOR SOLO SI ES CATEGORÍA ACCESSORIES
+        if (product.category == "Accessories") {
+            Spacer(modifier = Modifier.height(24.dp))
+
+            Text("Seleccioná un color", fontSize = 14.sp, fontWeight = FontWeight.Medium)
+            Spacer(modifier = Modifier.height(4.dp))
+
+            Box {
+                OutlinedButton(
+                    onClick = { expanded = true },
+                    shape = RoundedCornerShape(8.dp),
+                    modifier = Modifier.height(36.dp)
+                ) {
+                    Text(selectedColor, fontSize = 13.sp)
+                }
+
+                DropdownMenu(
+                    expanded = expanded,
+                    onDismissRequest = { expanded = false }
+                ) {
+                    listOf("Rojo", "Negro", "Naranja", "Verde").forEach { color ->
+                        DropdownMenuItem(
+                            text = { Text(color) },
+                            onClick = {
+                                selectedColor = color
+                                expanded = false
+                            }
                         )
                     }
                 }
