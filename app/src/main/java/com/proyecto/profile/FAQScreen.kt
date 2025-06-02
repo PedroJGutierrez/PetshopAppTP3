@@ -7,11 +7,10 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 
 @Composable
-fun TermsScreen(navController: NavController) {
+fun FAQScreen(navController: NavController) {
     Column(Modifier.fillMaxSize().padding(16.dp)) {
-        Text("Términos de Uso", style = MaterialTheme.typography.titleLarge)
+        Text("Preguntas Frecuentes", style = MaterialTheme.typography.titleLarge)
         Spacer(Modifier.height(20.dp))
-        Text("Texto de términos y condiciones de uso.")
+        Text("Acá irían las preguntas y respuestas frecuentes de la app.")
     }
 }
-

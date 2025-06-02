@@ -7,11 +7,10 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 
 @Composable
-fun TermsScreen(navController: NavController) {
+fun PrivacyPolicyScreen(navController: NavController) {
     Column(Modifier.fillMaxSize().padding(16.dp)) {
-        Text("Términos de Uso", style = MaterialTheme.typography.titleLarge)
+        Text("Política de Privacidad", style = MaterialTheme.typography.titleLarge)
         Spacer(Modifier.height(20.dp))
-        Text("Texto de términos y condiciones de uso.")
+        Text("Texto de política de privacidad.")
     }
 }
-
