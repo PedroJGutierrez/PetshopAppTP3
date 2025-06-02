@@ -1,5 +1,6 @@
 package com.proyecto.petshopapp
 
+import PaymentSuccessScreen
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.CircularProgressIndicator
@@ -16,6 +17,9 @@ import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.proyecto.petshopapp.home.*
 import com.proyecto.petshopapp.login.*
+import com.proyecto.petshopapp.payment.AddPaymentScreen
+import com.proyecto.petshopapp.ui.screens.SelectPaymentMethodScreen
+
 
 @Composable
 fun NavigationGraph(
@@ -63,6 +67,20 @@ fun NavigationGraph(
                     CircularProgressIndicator()
                 }
             }
+        }
+        composable("select_payment_method") {
+            SelectPaymentMethodScreen(navController)
+        }
+        composable("payment_success") {
+            PaymentSuccessScreen(navController)
+        }
+        composable("add_payment_method") {
+            AddPaymentScreen(
+                onBackPressed = { navController.popBackStack() },
+                onSave = {
+                    navController.popBackStack()
+                }
+            )
         }
         composable("favorites") {
             FavoritesScreen(navController = navController, loginViewModel = loginViewModel)

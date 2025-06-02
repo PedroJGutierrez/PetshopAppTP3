@@ -43,6 +43,7 @@ fun CartScreen(navController: NavController, loginViewModel: LoginViewModel) {
     }
     val tax = subtotal * 0.10
     val total = subtotal + tax
+    val paymentMethods = listOf("Paypal", "Bank Transfer") // Simulación
 
     Column(
         modifier = Modifier
@@ -151,7 +152,11 @@ fun CartScreen(navController: NavController, loginViewModel: LoginViewModel) {
             Spacer(modifier = Modifier.height(16.dp))
 
             Button(
-                onClick = { },
+                onClick = {if (paymentMethods.isEmpty()) {
+                    navController.navigate("add_payment_method")
+                } else {
+                    navController.navigate("select_payment_method")
+                } },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(50.dp),
