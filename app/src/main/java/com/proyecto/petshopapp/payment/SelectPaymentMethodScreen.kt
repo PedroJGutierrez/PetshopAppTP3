@@ -1,5 +1,6 @@
 package com.proyecto.petshopapp.ui.screens
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
@@ -12,8 +13,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
-import com.proyecto.petshopapp.payment.components.BackButton
 import com.proyecto.petshopapp.payment.components.PaymentOption
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 
 @Composable
 fun SelectPaymentMethodScreen(navController: NavHostController) {
@@ -27,24 +29,40 @@ fun SelectPaymentMethodScreen(navController: NavHostController) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier
-                .padding(top = 48.dp)
                 .fillMaxWidth()
+                .padding(top = 48.dp, bottom = 32.dp)
         ) {
-            BackButton(navController)
-            Spacer(modifier = Modifier.width(24.dp))
+            // Botón flecha más grande y visible
+            IconButton(
+                onClick = { navController.popBackStack() },
+                modifier = Modifier
+                    .size(48.dp)
+                    .background(
+                        color = Color.White.copy(alpha = 0.9f),
+                        shape = RoundedCornerShape(12.dp)
+                    )
+            ) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                    contentDescription = "Back",
+                    tint = Color(0xFF1C1C1E),
+                    modifier = Modifier.size(28.dp)
+                )
+            }
+
+            Spacer(modifier = Modifier.width(16.dp))
+
             Text(
                 text = "Payment Method",
                 style = TextStyle(
+                    color = Color(0xFF1C1C1E),
                     fontWeight = FontWeight.Bold,
-                    fontSize = 15.sp,
-                    lineHeight = (15.sp.value * 1.47).sp,
+                    fontSize = 24.sp,
                     letterSpacing = 0.sp,
-                ),
-                modifier = Modifier.align(Alignment.CenterVertically)
+                    lineHeight = (24.sp.value * 1.2).sp,
+                )
             )
         }
-
-        Spacer(modifier = Modifier.height(32.dp))
 
         Text(
             "Choose your Payment Method",
@@ -67,11 +85,13 @@ fun SelectPaymentMethodScreen(navController: NavHostController) {
             onClick = { navController.navigate("payment_success") },
             modifier = Modifier
                 .fillMaxWidth()
-                .height(60.dp),
-            shape = RoundedCornerShape(30.dp),
+                .height(70.dp),
+            shape = RoundedCornerShape(28.dp),
             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF8B5CF6))
         ) {
-            Text("Checkout", color = Color.White)
+            Text("Checkout", color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Bold)
         }
+
+        Spacer(modifier = Modifier.height(24.dp))
     }
 }
