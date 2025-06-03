@@ -7,6 +7,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -19,6 +20,8 @@ import com.proyecto.petshopapp.home.*
 import com.proyecto.petshopapp.login.*
 import com.proyecto.petshopapp.payment.AddPaymentScreen
 import com.proyecto.petshopapp.ui.screens.SelectPaymentMethodScreen
+import androidx.compose.ui.platform.LocalContext
+import com.proyecto.petshopapp.local.DatabaseProvider
 
 
 @Composable
@@ -28,6 +31,10 @@ fun NavigationGraph(
     startDestination: String = "splash"
 ) {
     val productViewModel: ProductViewModel = viewModel()
+    val context = LocalContext.current
+    val db = remember { DatabaseProvider.provideDatabase(context) }
+    val cartViewModel: CartViewModel = viewModel(factory = CartViewModel.Factory(db.cartDao()))
+
 
     NavHost(navController = navController, startDestination = startDestination) {
         composable("splash") {
@@ -72,7 +79,8 @@ fun NavigationGraph(
             SelectPaymentMethodScreen(navController)
         }
         composable("payment_success") {
-            PaymentSuccessScreen(navController)
+            PaymentSuccessScreen(navController = navController,
+                cartViewModel = cartViewModel)
         }
         composable("add_payment_method") {
             AddPaymentScreen(
@@ -86,7 +94,7 @@ fun NavigationGraph(
             FavoritesScreen(navController = navController, loginViewModel = loginViewModel)
         }
         composable("cart") {
-            CartScreen(navController = navController, loginViewModel = loginViewModel)
+            CartScreen(navController = navController, loginViewModel = loginViewModel,cartViewModel = cartViewModel)
         }
         composable(
             "product_detail/{productId}",
