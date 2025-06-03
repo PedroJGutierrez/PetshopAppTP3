@@ -17,6 +17,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -26,7 +27,7 @@ import com.proyecto.petshopapp.local.DatabaseProvider
 import com.proyecto.petshopapp.login.LoginViewModel
 
 @Composable
-fun CartScreen(navController: NavController, loginViewModel: LoginViewModel) {
+fun CartScreen(navController: NavController, loginViewModel: LoginViewModel, cartViewModel: CartViewModel) {
     val context = LocalContext.current
     val db = remember { DatabaseProvider.provideDatabase(context) }
     val cartViewModel: CartViewModel = viewModel(factory = CartViewModel.Factory(db.cartDao()))
@@ -151,12 +152,43 @@ fun CartScreen(navController: NavController, loginViewModel: LoginViewModel) {
 
             Spacer(modifier = Modifier.height(16.dp))
 
+            if (cartItems.isEmpty()) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 16.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = "Your cart is empty !!",
+                        color = Color.Black,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 22.sp,
+                        textAlign = TextAlign.Center
+                    )
+                    Spacer(modifier = Modifier.height(6.dp))
+                    Text(
+                        text = "Please add products to continue with your purchase.",
+                        color = Color.Black.copy(alpha = 0.7f),
+                        fontWeight = FontWeight.Normal,
+                        fontSize = 14.sp,
+                        textAlign = TextAlign.Center,
+                        letterSpacing = 0.5.sp,
+                        lineHeight = 18.sp,
+                        modifier = Modifier.padding(horizontal = 24.dp)
+                    )
+                }
+            }
+
             Button(
-                onClick = {if (paymentMethods.isEmpty()) {
-                    navController.navigate("add_payment_method")
-                } else {
-                    navController.navigate("select_payment_method")
-                } },
+                onClick = {
+                    if (paymentMethods.isEmpty()) {
+                        navController.navigate("add_payment_method")
+                    } else {
+                        navController.navigate("select_payment_method")
+                    }
+                },
+                enabled = cartItems.isNotEmpty(),
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(50.dp),
@@ -168,3 +200,4 @@ fun CartScreen(navController: NavController, loginViewModel: LoginViewModel) {
         }
     }
 }
+
