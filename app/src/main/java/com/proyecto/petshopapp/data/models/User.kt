@@ -9,5 +9,6 @@ data class User(
     val image: String,
     val sales: Int = 0,
     val followers: Int = 0,
-    val following: Int = 0
+    val following: Int = 0,
+    val photo: String = ""
 )

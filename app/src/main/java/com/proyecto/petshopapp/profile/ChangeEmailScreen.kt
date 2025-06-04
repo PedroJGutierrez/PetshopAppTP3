@@ -1,4 +1,4 @@
-package com.proyecto.petshopapp.ui.settings
+package com.proyecto.petshopapp.profile
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*

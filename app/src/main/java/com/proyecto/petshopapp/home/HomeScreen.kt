@@ -125,19 +125,6 @@ fun HomeScreen(navController: NavController, loginViewModel: LoginViewModel) {
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            Button(
-                onClick = {
-                    FirebaseAuth.getInstance().signOut()
-                    navController.navigate("login") {
-                        popUpTo("home") { inclusive = true }
-                    }
-                },
-                modifier = Modifier
-                    .padding(horizontal = 16.dp)
-                    .fillMaxWidth()
-            ) {
-                Text("Cerrar sesión")
-            }
 
             Spacer(modifier = Modifier.height(100.dp))
         }
@@ -567,7 +554,7 @@ fun BottomNavigationBar(
                     BottomNavItem(
                         icon = Icons.Default.Person,
                         isSelected = false,
-                        onClick = { },
+                        onClick = { navController.navigate("profile") },
                         label = "Profile"
                     )
                     BottomNavItem(
@@ -612,7 +599,7 @@ fun BottomNavigationBar(
                 BottomNavItem(
                     icon = Icons.Default.Person,
                     isSelected = false,
-                    onClick = { },
+                    onClick = { navController.navigate("profile") },
                     label = "Profile"
                 )
             }

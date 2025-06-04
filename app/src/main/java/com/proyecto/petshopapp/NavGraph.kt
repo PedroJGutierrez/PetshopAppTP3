@@ -22,7 +22,7 @@ import com.proyecto.petshopapp.payment.AddPaymentScreen
 import com.proyecto.petshopapp.ui.screens.SelectPaymentMethodScreen
 import androidx.compose.ui.platform.LocalContext
 import com.proyecto.petshopapp.local.DatabaseProvider
-
+import com.proyecto.petshopapp.profile.ProfileScreen
 
 @Composable
 fun NavigationGraph(
@@ -48,6 +48,9 @@ fun NavigationGraph(
         }
         composable("create_account") {
             CreateAccountScreen(navController)
+        }
+        composable("profile") {
+            ProfileScreen(navController = navController, loginViewModel = loginViewModel)
         }
         composable("forgot_password") {
             ForgotPasswordScreen(navController)
