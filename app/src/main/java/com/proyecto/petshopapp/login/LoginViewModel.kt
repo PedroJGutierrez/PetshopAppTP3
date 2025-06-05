@@ -8,6 +8,7 @@ import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
 
 data class LoginUiState(
     val isLoading: Boolean = false,
@@ -69,6 +70,59 @@ class LoginViewModel : ViewModel() {
             }
     }
 
+    fun setDummySuccess(email: String, userType: String) {
+        _uiState.value = LoginUiState(
+            isLoading = false,
+            isSuccess = true,
+            userEmail = email,
+            userType = userType
+        )
+    }
+
+    fun setDummyError(message: String) {
+        _uiState.value = LoginUiState(
+            isLoading = false,
+            isSuccess = false,
+            errorMessage = message
+        )
+    }
+    fun loginWithDummy(emailOrUsername: String, password: String) {
+        _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
+
+
+        kotlinx.coroutines.GlobalScope.launch {
+            try {
+                val response = com.proyecto.petshopapp.network.NetworkClient.authApiService.login(
+                    com.proyecto.petshopapp.data.models.LoginRequest(
+                        username = emailOrUsername,
+                        password = password
+                    )
+                )
+
+                if (response.isSuccessful && response.body() != null) {
+                    val data = response.body()!!
+                    _uiState.value = LoginUiState(
+                        isLoading = false,
+                        isSuccess = true,
+                        userEmail = data.email,
+                        userType = "DummyUser"
+                    )
+                } else {
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        isSuccess = false,
+                        errorMessage = "Dummy login failed: ${response.message()}"
+                    )
+                }
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(
+                    isLoading = false,
+                    isSuccess = false,
+                    errorMessage = "Dummy login error: ${e.localizedMessage}"
+                )
+            }
+        }
+    }
     fun changePassword(currentPassword: String, newPassword: String) {
         val user = firebaseAuth.currentUser
         if (user?.email == null) {

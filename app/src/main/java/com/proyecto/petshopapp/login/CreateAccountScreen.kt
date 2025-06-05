@@ -34,7 +34,7 @@ fun CreateAccountScreen(navController: NavController) {
     var passwordVisible by remember { mutableStateOf(false) }
     var confirmPasswordVisible by remember { mutableStateOf(false) }
 
-    val userTypes = listOf("Usuario final", "Revendedor")
+    val userTypes = listOf("Normal user", "Reseller")
     var selectedUserType by remember { mutableStateOf(userTypes[0]) }
 
     var showUsernameError by remember { mutableStateOf(false) }
@@ -149,7 +149,7 @@ fun CreateAccountScreen(navController: NavController) {
         if (showConfirmPasswordError) Text("Passwords must match", color = Color.Red, fontSize = 12.sp)
 
         Spacer(modifier = Modifier.height(16.dp))
-        Text("Tipo de usuario", fontWeight = FontWeight.SemiBold)
+        Text("User type", fontWeight = FontWeight.SemiBold)
         UserTypeSelector(
             options = userTypes,
             selectedOption = selectedUserType,

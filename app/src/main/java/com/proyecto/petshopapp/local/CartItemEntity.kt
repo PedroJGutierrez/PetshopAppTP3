@@ -10,5 +10,5 @@ data class CartItemEntity(
     val title: String,
     val price: Double,
     val thumbnail: String,
-    val quantity: Int // 👈 NUEVO
+    val quantity: Int
 )

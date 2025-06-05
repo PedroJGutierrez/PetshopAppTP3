@@ -31,6 +31,7 @@ fun LoginScreen(
     var passwordVisible by remember { mutableStateOf(false) }
     var showEmailError by remember { mutableStateOf(false) }
     var showPasswordError by remember { mutableStateOf(false) }
+    var useDummyLogin by remember { mutableStateOf(false) }
 
     val uiState by viewModel.uiState.collectAsState()
 
@@ -59,7 +60,15 @@ fun LoginScreen(
             color = Color.Gray
         )
 
-        Spacer(modifier = Modifier.height(40.dp))
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Checkbox(checked = useDummyLogin, onCheckedChange = { useDummyLogin = it })
+            Spacer(modifier = Modifier.width(8.dp))
+            Text("Use demo login (DummyJSON)")
+        }
+
+        Spacer(modifier = Modifier.height(24.dp))
 
         // Email
         OutlinedTextField(
@@ -69,7 +78,7 @@ fun LoginScreen(
                 showEmailError = false
                 viewModel.clearError()
             },
-            label = { Text("Email") },
+            label = { Text("Email or Username") },
             textStyle = TextStyle(color = Color.Black),
             isError = showEmailError,
             enabled = !uiState.isLoading,
@@ -82,7 +91,7 @@ fun LoginScreen(
             )
         )
         if (showEmailError) {
-            Text("Email is required", color = Color.Red, fontSize = 12.sp)
+            Text("Email/Username is required", color = Color.Red, fontSize = 12.sp)
         }
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -147,7 +156,11 @@ fun LoginScreen(
                 showPasswordError = password.isEmpty()
 
                 if (!showEmailError && !showPasswordError) {
-                    viewModel.login(email.trim(), password)
+                    if (useDummyLogin) {
+                        viewModel.loginWithDummy(email.trim(), password)
+                    } else {
+                        viewModel.login(email.trim(), password)
+                    }
                 }
             },
             enabled = !uiState.isLoading,
