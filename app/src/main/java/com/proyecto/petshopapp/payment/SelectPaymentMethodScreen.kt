@@ -1,5 +1,6 @@
 package com.proyecto.petshopapp.ui.screens
 
+import android.R.attr.title
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -16,6 +17,7 @@ import androidx.navigation.NavHostController
 import com.proyecto.petshopapp.payment.components.PaymentOption
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import com.proyecto.petshopapp.payment.components.TopBarWithBack
 
 @Composable
 fun SelectPaymentMethodScreen(navController: NavHostController) {
@@ -26,43 +28,10 @@ fun SelectPaymentMethodScreen(navController: NavHostController) {
             .fillMaxSize()
             .padding(horizontal = 24.dp, vertical = 24.dp)
     ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 48.dp, bottom = 32.dp)
-        ) {
-            // Botón flecha más grande y visible
-            IconButton(
-                onClick = { navController.popBackStack() },
-                modifier = Modifier
-                    .size(48.dp)
-                    .background(
-                        color = Color.White.copy(alpha = 0.9f),
-                        shape = RoundedCornerShape(12.dp)
-                    )
-            ) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = "Back",
-                    tint = Color(0xFF1C1C1E),
-                    modifier = Modifier.size(28.dp)
-                )
-            }
-
-            Spacer(modifier = Modifier.width(16.dp))
-
-            Text(
-                text = "Payment Method",
-                style = TextStyle(
-                    color = Color(0xFF1C1C1E),
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 24.sp,
-                    letterSpacing = 0.sp,
-                    lineHeight = (24.sp.value * 1.2).sp,
-                )
-            )
-        }
+        TopBarWithBack(
+            title = "Payment Method",
+            onBack = { navController.popBackStack() }
+        )
 
         Text(
             "Choose your Payment Method",
