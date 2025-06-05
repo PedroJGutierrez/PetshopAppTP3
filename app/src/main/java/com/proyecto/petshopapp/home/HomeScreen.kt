@@ -44,11 +44,29 @@ import com.proyecto.petshopapp.login.LoginViewModel
 import com.proyecto.petshopapp.ui.theme.PurplePrimary
 import androidx.compose.material.icons.outlined.LocalShipping
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.style.TextOverflow
+import com.google.firebase.Firebase
+import com.google.firebase.firestore.firestore
 
 
 @Composable
 fun HomeScreen(navController: NavController, loginViewModel: LoginViewModel) {
-    var selectedLocation by remember { mutableStateOf("Buenos Aires") }
+    val addressViewModel: AddressViewModel = viewModel()
+    val userAddresses = addressViewModel.userAddresses
+
+    var selectedLocation by remember { mutableStateOf("") }
+    val persistedLocation by addressViewModel.selectedLocation
+
+    LaunchedEffect(persistedLocation, userAddresses) {
+        if (selectedLocation.isEmpty()) {
+            selectedLocation = if (persistedLocation.isNotEmpty()) {
+                persistedLocation
+            } else {
+                userAddresses.firstOrNull() ?: ""
+            }
+        }
+    }
+
     var selectedCategory by remember { mutableStateOf("All") }
     var showLocationModal by remember { mutableStateOf(false) }
     var showCategoryModal by remember { mutableStateOf(false) }
@@ -142,7 +160,7 @@ fun HomeScreen(navController: NavController, loginViewModel: LoginViewModel) {
             modifier = Modifier.zIndex(1f)
         ) {
             LocationModal(
-                locations = listOf("Buenos Aires"),
+                locations = userAddresses,
                 selectedLocation = selectedLocation,
                 onLocationSelect = {
                     selectedLocation = it
@@ -153,19 +171,26 @@ fun HomeScreen(navController: NavController, loginViewModel: LoginViewModel) {
         }
 
         AnimatedVisibility(
-            visible = showCategoryModal,
+            visible = showLocationModal,
             enter = slideInVertically(initialOffsetY = { it }),
             exit = slideOutVertically(targetOffsetY = { it }),
             modifier = Modifier.zIndex(1f)
         ) {
-            CategoryModal(
-                categories = listOf("All", "Food", "Toys", "Accessories"),
-                selectedCategory = selectedCategory,
-                onCategorySelect = {
-                    selectedCategory = it
-                    showCategoryModal = false
+            LocationModal(
+                locations = userAddresses,
+                selectedLocation = selectedLocation,
+                onLocationSelect = { newLocation ->
+                    selectedLocation = newLocation
+                    showLocationModal = false
+
+
+                    val uid = FirebaseAuth.getInstance().currentUser?.uid
+                    uid?.let {
+                        Firebase.firestore.collection("users").document(it)
+                            .update("selectedLocation", newLocation)
+                    }
                 },
-                onDismiss = { showCategoryModal = false }
+                onDismiss = { showLocationModal = false }
             )
         }
     }
@@ -198,7 +223,10 @@ fun HeaderSection(
             Text(
                 text = location,
                 fontSize = 14.sp,
-                color = Color.Black
+                color = Color.Black,
+                maxLines = 1,
+                modifier = Modifier.widthIn(max = 180.dp),
+                overflow = TextOverflow.Ellipsis
             )
             Spacer(modifier = Modifier.width(4.dp))
             Icon(
@@ -509,13 +537,13 @@ fun BottomNavigationBar(
                     BottomNavItem(
                         icon = Icons.Default.History,
                         isSelected = false,
-                        onClick = { /* TODO: Historial */ },
+                        onClick = { navController.navigate("records") },
                         label = "Records"
                     )
                     BottomNavItem(
                         icon = Icons.Outlined.LocalShipping,
                         isSelected = false,
-                        onClick = { /* TODO: Gestión pedidos */ },
+                        onClick = { navController.navigate("orders") },
                         label = "Orders"
                     )
                 }
@@ -660,7 +688,7 @@ fun LocationModal(
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     var searchQuery by remember { mutableStateOf("") }
 
-    // Lista filtrada según búsqueda
+
     val filteredLocations = locations.filter { it.contains(searchQuery, ignoreCase = true) }
 
     ModalBottomSheet(

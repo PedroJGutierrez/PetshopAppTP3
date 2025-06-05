@@ -22,7 +22,14 @@ import com.proyecto.petshopapp.payment.AddPaymentScreen
 import com.proyecto.petshopapp.ui.screens.SelectPaymentMethodScreen
 import androidx.compose.ui.platform.LocalContext
 import com.proyecto.petshopapp.local.DatabaseProvider
+import com.proyecto.petshopapp.profile.AddressScreen
+import com.proyecto.petshopapp.profile.ContactUsScreen
+import com.proyecto.petshopapp.profile.FAQScreen
+import com.proyecto.petshopapp.profile.NotificationOptionsScreen
+import com.proyecto.petshopapp.profile.PrivacyPolicyScreen
 import com.proyecto.petshopapp.profile.ProfileScreen
+import com.proyecto.petshopapp.profile.SecurityScreen
+import com.proyecto.petshopapp.profile.SettingsScreen
 
 @Composable
 fun NavigationGraph(
@@ -55,6 +62,12 @@ fun NavigationGraph(
         composable("forgot_password") {
             ForgotPasswordScreen(navController)
         }
+        composable("security") {
+            SecurityScreen(
+                navController = navController,
+                loginViewModel = loginViewModel
+            )
+        }
         composable("forgot_password_confirm") {
             ForgotPasswordConfirmScreen(navController)
         }
@@ -63,6 +76,15 @@ fun NavigationGraph(
         }
         composable("notifications") {
             NotificationScreen(navController)
+        }
+        composable("notification_options") {
+            NotificationOptionsScreen(onBack = { navController.popBackStack() })
+        }
+        composable("address") {
+            AddressScreen(
+                onBack = { navController.popBackStack() },
+                loginViewModel = loginViewModel
+            )
         }
         composable("home") {
             val uiState = loginViewModel.uiState.collectAsState()
@@ -81,6 +103,9 @@ fun NavigationGraph(
         composable("select_payment_method") {
             SelectPaymentMethodScreen(navController)
         }
+        composable("settings") {
+            SettingsScreen(navController = navController, loginViewModel = loginViewModel)
+        }
         composable("payment_success") {
             PaymentSuccessScreen(navController = navController,
                 cartViewModel = cartViewModel)
@@ -93,12 +118,23 @@ fun NavigationGraph(
                 }
             )
         }
+        composable("faq") {
+            FAQScreen(navController = navController)
+        }
+        composable("privacy") {
+            PrivacyPolicyScreen(navController = navController)
+        }
         composable("favorites") {
             FavoritesScreen(navController = navController, loginViewModel = loginViewModel)
+        }
+        composable("contact") {
+            ContactUsScreen(onBack = { navController.popBackStack() })
         }
         composable("cart") {
             CartScreen(navController = navController, loginViewModel = loginViewModel,cartViewModel = cartViewModel)
         }
+        composable("records") { RecordsScreen(onBack = { navController.popBackStack() }) }
+        composable("orders") { OrdersScreen(onBack = { navController.popBackStack() }) }
         composable(
             "product_detail/{productId}",
             arguments = listOf(navArgument("productId") { type = NavType.IntType })

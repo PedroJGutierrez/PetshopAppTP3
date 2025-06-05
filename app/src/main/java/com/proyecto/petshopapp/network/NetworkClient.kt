@@ -22,6 +22,8 @@ object NetworkClient {
         .addConverterFactory(GsonConverterFactory.create())
         .build()
 
+
     val authApiService: AuthApiService = retrofit.create(AuthApiService::class.java)
     val productApiService: ProductApiService = retrofit.create(ProductApiService::class.java)
+    val userApiService: UserApiService = retrofit.create(UserApiService::class.java)
 }

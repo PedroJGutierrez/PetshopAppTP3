@@ -10,6 +10,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
@@ -69,6 +70,7 @@ fun LoginScreen(
                 viewModel.clearError()
             },
             label = { Text("Email") },
+            textStyle = TextStyle(color = Color.Black),
             isError = showEmailError,
             enabled = !uiState.isLoading,
             modifier = Modifier.fillMaxWidth(),
@@ -94,6 +96,7 @@ fun LoginScreen(
                 viewModel.clearError()
             },
             label = { Text("Password") },
+            textStyle = TextStyle(color = Color.Black),
             visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
             trailingIcon = {
                 val icon = if (passwordVisible) Icons.Filled.VisibilityOff else Icons.Filled.Visibility

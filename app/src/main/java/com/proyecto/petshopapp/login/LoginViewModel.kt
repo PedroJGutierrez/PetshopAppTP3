@@ -1,6 +1,7 @@
 package com.proyecto.petshopapp.login
 
 import androidx.lifecycle.ViewModel
+import com.google.firebase.auth.EmailAuthProvider
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
@@ -16,12 +17,21 @@ data class LoginUiState(
     val userType: String? = null
 )
 
+data class PasswordChangeState(
+    val isLoading: Boolean = false,
+    val isSuccess: Boolean = false,
+    val errorMessage: String? = null
+)
+
 class LoginViewModel : ViewModel() {
     private val firebaseAuth = FirebaseAuth.getInstance()
     private val db = Firebase.firestore
 
     private val _uiState = MutableStateFlow(LoginUiState())
     val uiState: StateFlow<LoginUiState> = _uiState.asStateFlow()
+
+    private val _passwordChangeState = MutableStateFlow(PasswordChangeState())
+    val passwordChangeState: StateFlow<PasswordChangeState> = _passwordChangeState.asStateFlow()
 
     fun login(email: String, password: String) {
         _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
@@ -59,9 +69,61 @@ class LoginViewModel : ViewModel() {
             }
     }
 
+    fun changePassword(currentPassword: String, newPassword: String) {
+        val user = firebaseAuth.currentUser
+        if (user?.email == null) {
+            _passwordChangeState.value = PasswordChangeState(
+                isLoading = false,
+                isSuccess = false,
+                errorMessage = "Usuario no autenticado"
+            )
+            return
+        }
+
+        _passwordChangeState.value = PasswordChangeState(isLoading = true)
+
+
+        val credential = EmailAuthProvider.getCredential(user.email!!, currentPassword)
+
+
+        user.reauthenticate(credential)
+            .addOnCompleteListener { reauthTask ->
+                if (reauthTask.isSuccessful) {
+
+                    user.updatePassword(newPassword)
+                        .addOnCompleteListener { updateTask ->
+                            if (updateTask.isSuccessful) {
+                                _passwordChangeState.value = PasswordChangeState(
+                                    isLoading = false,
+                                    isSuccess = true,
+                                    errorMessage = null
+                                )
+                            } else {
+                                _passwordChangeState.value = PasswordChangeState(
+                                    isLoading = false,
+                                    isSuccess = false,
+                                    errorMessage = updateTask.exception?.message ?: "Error al cambiar la contraseña"
+                                )
+                            }
+                        }
+                } else {
+                    _passwordChangeState.value = PasswordChangeState(
+                        isLoading = false,
+                        isSuccess = false,
+                        errorMessage = "Contraseña actual incorrecta"
+                    )
+                }
+            }
+    }
+
+    fun clearPasswordChangeState() {
+        _passwordChangeState.value = PasswordChangeState()
+    }
+
     fun clearError() {
         _uiState.value = _uiState.value.copy(errorMessage = null)
     }
+
     fun fetchUserType(uid: String) {
         _uiState.value = _uiState.value.copy(isLoading = true)
         db.collection("users").document(uid).get()
@@ -81,6 +143,7 @@ class LoginViewModel : ViewModel() {
                 )
             }
     }
+
     fun observeFirebaseUser(onUserAvailable: (String) -> Unit) {
         val auth = FirebaseAuth.getInstance()
         val listener = FirebaseAuth.AuthStateListener { firebaseAuth ->
@@ -90,5 +153,69 @@ class LoginViewModel : ViewModel() {
             }
         }
         auth.addAuthStateListener(listener)
+    }
+    data class EmailChangeState(
+        val isLoading: Boolean = false,
+        val isSuccess: Boolean = false,
+        val errorMessage: String? = null
+    )
+
+    private val _emailChangeState = MutableStateFlow(EmailChangeState())
+    val emailChangeState: StateFlow<EmailChangeState> = _emailChangeState.asStateFlow()
+
+    fun changeEmail(currentPassword: String, newEmail: String) {
+        val user = firebaseAuth.currentUser
+        if (user?.email == null) {
+            _emailChangeState.value = EmailChangeState(
+                isLoading = false,
+                isSuccess = false,
+                errorMessage = "Usuario no autenticado"
+            )
+            return
+        }
+
+        _emailChangeState.value = EmailChangeState(isLoading = true)
+
+        val credential = EmailAuthProvider.getCredential(user.email!!, currentPassword)
+
+        user.reauthenticate(credential)
+            .addOnCompleteListener { reauthTask ->
+                if (reauthTask.isSuccessful) {
+                    user.updateEmail(newEmail)
+                        .addOnSuccessListener {
+                            db.collection("users").document(user.uid)
+                                .update("email", newEmail)
+                                .addOnSuccessListener {
+                                    _emailChangeState.value = EmailChangeState(
+                                        isLoading = false,
+                                        isSuccess = true
+                                    )
+                                }
+                                .addOnFailureListener {
+                                    _emailChangeState.value = EmailChangeState(
+                                        isLoading = false,
+                                        isSuccess = false,
+                                        errorMessage = "Email actualizado en Auth pero no en Firestore"
+                                    )
+                                }
+                        }
+                        .addOnFailureListener {
+                            _emailChangeState.value = EmailChangeState(
+                                isLoading = false,
+                                isSuccess = false,
+                                errorMessage = it.localizedMessage ?: "Error al actualizar email"
+                            )
+                        }
+                } else {
+                    _emailChangeState.value = EmailChangeState(
+                        isLoading = false,
+                        isSuccess = false,
+                        errorMessage = "Contraseña incorrecta"
+                    )
+                }
+            }
+    }
+    fun clearEmailChangeState() {
+        _emailChangeState.value = EmailChangeState()
     }
 }

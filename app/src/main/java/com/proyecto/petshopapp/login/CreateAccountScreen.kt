@@ -10,6 +10,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
@@ -68,6 +69,7 @@ fun CreateAccountScreen(navController: NavController) {
                 errorMessage = null
             },
             label = { Text("Username") },
+            textStyle = TextStyle(color = Color.Black),
             isError = showUsernameError,
             modifier = Modifier.fillMaxWidth(),
             colors = OutlinedTextFieldDefaults.colors(
@@ -86,6 +88,7 @@ fun CreateAccountScreen(navController: NavController) {
                 errorMessage = null
             },
             label = { Text("Email") },
+            textStyle = TextStyle(color = Color.Black),
             isError = showEmailError,
             modifier = Modifier.fillMaxWidth(),
             colors = OutlinedTextFieldDefaults.colors(
@@ -103,6 +106,7 @@ fun CreateAccountScreen(navController: NavController) {
                 showPasswordError = false
             },
             label = { Text("Password") },
+            textStyle = TextStyle(color = Color.Black),
             visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
             trailingIcon = {
                 val icon = if (passwordVisible) Icons.Filled.VisibilityOff else Icons.Filled.Visibility
@@ -127,6 +131,7 @@ fun CreateAccountScreen(navController: NavController) {
                 showConfirmPasswordError = false
             },
             label = { Text("Confirm Password") },
+            textStyle = TextStyle(color = Color.Black),
             visualTransformation = if (confirmPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
             trailingIcon = {
                 val icon = if (confirmPasswordVisible) Icons.Filled.VisibilityOff else Icons.Filled.Visibility
