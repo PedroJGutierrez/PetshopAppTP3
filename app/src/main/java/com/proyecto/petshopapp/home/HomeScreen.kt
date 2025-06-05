@@ -501,7 +501,7 @@ fun ProductCard(product: Product, navController: NavController, loginViewModel: 
                 ) {
                     Icon(
                         imageVector = Icons.Default.Add,
-                        contentDescription = "Agregar",
+                        contentDescription = "Add",
                         tint = Color.White,
                         modifier = Modifier.padding(4.dp)
                     )

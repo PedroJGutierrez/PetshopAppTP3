@@ -64,7 +64,7 @@ fun FavoritesScreen(navController: NavController, loginViewModel: LoginViewModel
             IconButton(onClick = { navController.popBackStack() }) {
                 Icon(Icons.Default.ArrowBack, contentDescription = "Back")
             }
-            Text("Favoritos", fontWeight = FontWeight.Bold, fontSize = 20.sp)
+            Text("Favorites", fontWeight = FontWeight.Bold, fontSize = 20.sp)
         }
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -188,7 +188,7 @@ fun FavoriteProductCard(
                     ) {
                         Icon(
                             imageVector = Icons.Default.Add,
-                            contentDescription = "Ver Detalle",
+                            contentDescription = "View Detail",
                             tint = Color.White,
                             modifier = Modifier.padding(4.dp)
                         )
@@ -226,7 +226,7 @@ fun FavoriteProductCard(
             ) {
                 Icon(
                     imageVector = Icons.Default.Favorite,
-                    contentDescription = "Favorito",
+                    contentDescription = "Favorite",
                     tint = if (isFavorite) Color.Red else Color.Gray
                 )
             }

@@ -156,7 +156,7 @@ fun SearchScreen(navController: NavController, productViewModel: ProductViewMode
                         modifier = Modifier.size(20.dp)
                     )
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("No se encontró su producto.", color = Color.Gray)
+                    Text("Product not found", color = Color.Gray)
                 }
             }
         }
