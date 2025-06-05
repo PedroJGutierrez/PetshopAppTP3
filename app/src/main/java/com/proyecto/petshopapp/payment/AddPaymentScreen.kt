@@ -1,42 +1,44 @@
 package com.proyecto.petshopapp.payment
 
 import androidx.compose.foundation.layout.*
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.proyecto.petshopapp.payment.components.PaymentTextField
 import com.proyecto.petshopapp.payment.components.SaveButton
+import com.proyecto.petshopapp.payment.components.TopBarWithBack
 
 @Composable
 fun AddPaymentScreen(
+    onBackPressed: () -> Unit,
     viewModel: AddPaymentViewModel = viewModel(),
-    onBackPressed: () -> Unit = {},
     onSave: () -> Unit = {}
 ) {
     val state by viewModel.uiState.collectAsState()
-
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(24.dp)
+            .padding(horizontal = 24.dp)
     ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            IconButton(onClick = onBackPressed) {
-                Icon(Icons.Filled.ArrowBack, contentDescription = "Back")
-            }
-            Spacer(modifier = Modifier.width(8.dp))
-            Text("Payment Method", style = MaterialTheme.typography.titleMedium)
-        }
+        TopBarWithBack(
+            title = "Payment Method",
+            onBack = onBackPressed
+        )
 
-        Spacer(modifier = Modifier.height(24.dp))
-
-        Text("Add New Payment", style = MaterialTheme.typography.titleSmall)
+        Text(
+            text = "Add New Payment",
+            style = TextStyle(
+                fontSize = 16.sp,
+                fontWeight = FontWeight.SemiBold
+            )
+        )
 
         Spacer(modifier = Modifier.height(16.dp))
 
@@ -47,11 +49,15 @@ fun AddPaymentScreen(
             keyboardType = KeyboardType.Number
         )
 
+        Spacer(modifier = Modifier.height(12.dp))
+
         PaymentTextField(
             value = state.cardName,
             label = "Card Name",
             onValueChange = viewModel::onCardNameChange
         )
+
+        Spacer(modifier = Modifier.height(12.dp))
 
         PaymentTextField(
             value = state.expiry,
@@ -59,6 +65,8 @@ fun AddPaymentScreen(
             onValueChange = viewModel::onExpiryChange,
             placeholder = "MM/YY"
         )
+
+        Spacer(modifier = Modifier.height(12.dp))
 
         PaymentTextField(
             value = state.cvv,

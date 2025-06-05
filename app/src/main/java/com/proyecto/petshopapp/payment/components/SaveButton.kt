@@ -9,6 +9,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 
 @Composable
 fun SaveButton(enabled: Boolean, onClick: () -> Unit) {
@@ -18,9 +19,9 @@ fun SaveButton(enabled: Boolean, onClick: () -> Unit) {
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 16.dp)
-            .height(48.dp),
-        shape = RoundedCornerShape(24.dp)
+            .height(60.dp),
+        shape = RoundedCornerShape(30.5.dp)
     ) {
-        Text("Save")
+        Text("Save", fontSize = 16.sp)
     }
 }
