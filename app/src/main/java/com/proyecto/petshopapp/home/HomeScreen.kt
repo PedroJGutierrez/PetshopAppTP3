@@ -98,7 +98,7 @@ fun HomeScreen(navController: NavController, loginViewModel: LoginViewModel) {
         ) {
             Spacer(modifier = Modifier.height(16.dp))
 
-            if (userType == "Revendedor") {
+            if (userType == "Reseller") {
                 Surface(
                     color = Color(0xFF4CAF50), // verde
                     shape = RoundedCornerShape(16.dp),
@@ -418,7 +418,7 @@ fun ProductCard(product: Product, navController: NavController, loginViewModel: 
     }
 
     val uiState by loginViewModel.uiState.collectAsState()
-    val isReseller = uiState.userType == "Revendedor"
+    val isReseller = uiState.userType == "Reseller"
     val discountedPrice = if (isReseller) product.price * 0.85 else product.price
 
     Card(
@@ -522,7 +522,7 @@ fun BottomNavigationBar(
     val uiState by viewModel.uiState.collectAsState()
     val userType = uiState.userType ?: "Usuario"
 
-    if (userType == "Revendedor") {
+    if (userType == "Reseller") {
         var expanded by remember { mutableStateOf(false) }
 
         Column(modifier = modifier.fillMaxWidth()) {

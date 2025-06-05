@@ -68,7 +68,7 @@ fun ProfileScreen(
     var username by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     val uiState by loginViewModel.uiState.collectAsState()
-    val isReseller = uiState.userType == "Revendedor"
+    val isReseller = uiState.userType == "Reseller"
 
     var showTooltip by remember { mutableStateOf(false) }
     LaunchedEffect(isEditingProfile) {
@@ -598,7 +598,7 @@ fun ProductCard(product: Product, navController: NavController, loginViewModel: 
     }
 
     val uiState by loginViewModel.uiState.collectAsState()
-    val isReseller = uiState.userType == "Revendedor"
+    val isReseller = uiState.userType == "Reseller"
     val discountedPrice = if (isReseller) product.price * 0.85 else product.price
 
     Card(
@@ -829,7 +829,7 @@ fun FavoriteProductCard(
     var isFavorite by remember { mutableStateOf(true) }
 
     val uiState by loginViewModel.uiState.collectAsState()
-    val isReseller = uiState.userType == "Revendedor"
+    val isReseller = uiState.userType == "Reseller"
     val finalPrice = if (isReseller) product.price * 0.85 else product.price
 
     Card(

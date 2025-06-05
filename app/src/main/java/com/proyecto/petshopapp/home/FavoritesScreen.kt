@@ -105,7 +105,7 @@ fun FavoriteProductCard(
     var isFavorite by remember { mutableStateOf(true) }
 
     val uiState by loginViewModel.uiState.collectAsState()
-    val isReseller = uiState.userType == "Revendedor"
+    val isReseller = uiState.userType == "Reseller"
     val finalPrice = if (isReseller) product.price * 0.85 else product.price
 
     Card(

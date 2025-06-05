@@ -33,7 +33,7 @@ fun CartScreen(navController: NavController, loginViewModel: LoginViewModel, car
     val cartViewModel: CartViewModel = viewModel(factory = CartViewModel.Factory(db.cartDao()))
 
     val uiState by loginViewModel.uiState.collectAsState()
-    val isReseller = uiState.userType == "Revendedor"
+    val isReseller = uiState.userType == "Reseller"
 
     val cartItems = cartViewModel.cartItems.collectAsState().value
 

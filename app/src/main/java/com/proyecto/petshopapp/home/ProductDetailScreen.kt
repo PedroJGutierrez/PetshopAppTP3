@@ -48,7 +48,7 @@ fun ProductDetailScreen(
     val cartViewModel: CartViewModel = viewModel(factory = CartViewModel.Factory(db.cartDao()))
 
     val uiState by loginViewModel.uiState.collectAsState()
-    val isReseller = uiState.userType == "Revendedor"
+    val isReseller = uiState.userType == "Reseller"
 
     val currentUser = FirebaseAuth.getInstance().currentUser
     val firestore = remember { FirebaseFirestore.getInstance() }
