@@ -137,6 +137,7 @@ fun ProfileScreen(
     }
 
 
+
     Box(modifier = Modifier.fillMaxSize()) {
         Column(modifier = Modifier.fillMaxSize()) {
 
@@ -238,17 +239,18 @@ fun ProfileScreen(
 
             if (!isSellerMode) {
 
-                Box(modifier = Modifier.fillMaxWidth().height(180.dp)) {
+                Box(modifier = Modifier.fillMaxWidth().height(240.dp)) {
                     Image(
                         painter = painterResource(R.drawable.gris),
                         contentDescription = null,
                         contentScale = ContentScale.Crop,
                         modifier = Modifier.fillMaxSize()
                     )
+
                     Column(
                         modifier = Modifier
-                            .align(Alignment.BottomCenter)
-                            .offset(y = 60.dp),
+                            .align(Alignment.TopCenter)
+                            .padding(top = 32.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         Image(
@@ -262,18 +264,20 @@ fun ProfileScreen(
                         Spacer(modifier = Modifier.height(8.dp))
 
                         Text(
-                            text = user?.username ?: "",
+                            text = username,
                             fontSize = 20.sp,
                             fontWeight = FontWeight.Bold,
                             color = Color.Black,
+                            fontFamily = poppinsFont,
                             modifier = Modifier.padding(top = 4.dp)
                         )
+
 
                         if (isEditingProfile) {
                             IconButton(
                                 onClick = { showPhotoMenu = true },
                                 modifier = Modifier
-                                    .offset(x = (40).dp, y = (-60).dp)
+                                    .offset(x = (40).dp, y = (-100).dp)
                                     .size(28.dp)
                                     .background(Color.White, shape = CircleShape)
                                     .border(1.dp, Color.Gray, CircleShape)
@@ -341,20 +345,7 @@ fun ProfileScreen(
                     }
                 }
 
-                Spacer(modifier = Modifier.height(24.dp))
-
-                Text(
-                    user?.username ?: "",
-                    fontSize = 22.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.Black,
-                    modifier = Modifier
-                        .align(Alignment.CenterHorizontally)
-                        .padding(bottom = 8.dp)
-                )
-
                 Spacer(modifier = Modifier.height(16.dp))
-
 
                 Row(
                     modifier = Modifier
@@ -397,7 +388,6 @@ fun ProfileScreen(
                         verticalArrangement = Arrangement.spacedBy(12.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-
                         OutlinedTextField(
                             value = nombre,
                             onValueChange = { nombre = it },
@@ -408,7 +398,6 @@ fun ProfileScreen(
                             modifier = Modifier.fillMaxWidth(),
                             textStyle = LocalTextStyle.current.copy(color = Color.Black)
                         )
-
 
                         OutlinedTextField(
                             value = username,
@@ -421,7 +410,6 @@ fun ProfileScreen(
                             textStyle = LocalTextStyle.current.copy(color = Color.Black)
                         )
 
-
                         OutlinedTextField(
                             value = email,
                             onValueChange = {},
@@ -433,7 +421,6 @@ fun ProfileScreen(
                             enabled = false,
                             textStyle = LocalTextStyle.current.copy(color = Color.DarkGray)
                         )
-
 
                         Row(
                             modifier = Modifier
@@ -454,7 +441,7 @@ fun ProfileScreen(
                                     modifier = Modifier
                                         .size(32.dp)
                                         .clip(CircleShape)
-                                        .background(Color(0xFF4CAF50)), // verde
+                                        .background(Color(0xFF4CAF50)),
                                     contentAlignment = Alignment.Center
                                 ) {
                                     Icon(
@@ -467,8 +454,7 @@ fun ProfileScreen(
                             }
                         }
                     }
-                }
-                else if (showSaved) {
+                } else if (showSaved) {
                     Column(modifier = Modifier.padding(horizontal = 16.dp)) {
                         if (favorites.isEmpty()) {
                             Text(
@@ -490,7 +476,6 @@ fun ProfileScreen(
                                         navController = navController,
                                         loginViewModel = loginViewModel,
                                         onFavoriteChanged = {
-
                                             FirebaseAuth.getInstance().currentUser?.uid?.let { uid ->
                                                 cargarFavoritos(uid)
                                             }
@@ -501,9 +486,8 @@ fun ProfileScreen(
                         }
                     }
                 }
-
-
-            } else {
+            }
+            else {
                 // SELLER MODE
                 Image(painter = painterResource(R.drawable.naranja), contentDescription = null,
                     modifier = Modifier.fillMaxWidth().height(120.dp))
