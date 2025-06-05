@@ -113,8 +113,8 @@ fun NavigationGraph(
         composable("add_payment_method") {
             AddPaymentScreen(
                 onBackPressed = { navController.popBackStack() },
-                onSave = {
-                    navController.popBackStack()
+                onNavigateHome = {
+                    navController.navigate("home")
                 }
             )
         }

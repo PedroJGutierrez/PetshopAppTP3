@@ -76,7 +76,7 @@ fun SettingsScreen(
         SettingsItem(
             icon = Icons.Default.CreditCard,
             label = "Payment Method",
-            onClick = { navController.navigate("payment") }
+            onClick = { navController.navigate("add_payment_method") }
         )
 
         SettingsItem(
