@@ -73,6 +73,7 @@ dependencies {
     implementation(libs.hilt.navigation.compose)
     implementation(libs.room.runtime)
     implementation(libs.room.ktx)
+    implementation("com.airbnb.android:lottie-compose:6.1.0")
     kapt(libs.room.compiler)
     implementation(platform("com.google.firebase:firebase-bom:33.14.0"))
     implementation("com.google.firebase:firebase-analytics")

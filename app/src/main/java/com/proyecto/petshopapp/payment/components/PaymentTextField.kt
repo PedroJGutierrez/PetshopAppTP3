@@ -14,6 +14,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.text.input.VisualTransformation
 
 @Composable
 fun PaymentTextField(
@@ -21,7 +22,10 @@ fun PaymentTextField(
     label: String,
     onValueChange: (String) -> Unit,
     keyboardType: KeyboardType = KeyboardType.Text,
-    placeholder: String = ""
+    placeholder: String = "",
+    isError: Boolean = false,
+    supportingText: String? = null,
+    visualTransformation: VisualTransformation = VisualTransformation.None
 ) {
     OutlinedTextField(
         value = value,
@@ -34,13 +38,16 @@ fun PaymentTextField(
         },
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 6.dp),
+            .padding(vertical = 1.dp),
         keyboardOptions = KeyboardOptions.Default.copy(keyboardType = keyboardType),
         shape = RoundedCornerShape(16.dp),
         colors = OutlinedTextFieldDefaults.colors(
             focusedBorderColor = Color(0xFF9B51E0),
             unfocusedBorderColor = Color(0xFFCCCCCC)
         ),
-        textStyle = TextStyle(fontSize = 14.sp)
+        textStyle = TextStyle(fontSize = 14.sp),
+        isError = isError,
+        supportingText = { if (supportingText != null) Text(supportingText, fontSize = 12.sp) },
+        visualTransformation = visualTransformation
     )
 }
