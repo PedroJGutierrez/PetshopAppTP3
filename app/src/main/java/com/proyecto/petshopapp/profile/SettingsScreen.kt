@@ -110,12 +110,12 @@ fun SettingsScreen(
 
         Spacer(modifier = Modifier.height(40.dp))
 
-        // Log out button
+
         Button(
             onClick = {
                 FirebaseAuth.getInstance().signOut()
                 navController.navigate("login") {
-                    popUpTo(0) // Limpia el backstack
+                    popUpTo(0)
                 }
             },
             modifier = Modifier

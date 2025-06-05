@@ -23,14 +23,14 @@ class MainActivity : ComponentActivity() {
             val uiState by loginViewModel.uiState.collectAsState()
 
             PetshopAppTheme {
-                // Cargar el tipo de usuario si hay usuario logueado
+
                 LaunchedEffect(firebaseUser) {
                     if (firebaseUser != null) {
                         loginViewModel.fetchUserType(firebaseUser.uid)
                     }
                 }
 
-                // Navegación según si hay usuario o no
+
                 LaunchedEffect(firebaseUser, uiState.userType) {
                     if (firebaseUser != null && uiState.userType != null) {
                         navController.navigate("home") {
