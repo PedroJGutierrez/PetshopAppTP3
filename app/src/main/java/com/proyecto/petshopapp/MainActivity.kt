@@ -6,32 +6,31 @@ import androidx.activity.compose.setContent
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.collectAsState
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.compose.rememberNavController
-import com.google.firebase.auth.FirebaseAuth
 import com.proyecto.petshopapp.ui.login.LoginViewModel
-import com.proyecto.petshopapp.ui.login.LoginViewModelFactory
 import com.proyecto.petshopapp.ui.navigation.NavigationGraph
 import com.proyecto.petshopapp.ui.theme.PetshopAppTheme
+import dagger.hilt.android.AndroidEntryPoint
 
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         setContent {
             val navController = rememberNavController()
-            val loginViewModel: LoginViewModel = viewModel(factory = LoginViewModelFactory())
-            val firebaseUser = FirebaseAuth.getInstance().currentUser
+            val loginViewModel: LoginViewModel = hiltViewModel()
             val uiState by loginViewModel.uiState.collectAsState()
+            val firebaseUser = loginViewModel.getCurrentUser() // ✅ Usamos la instancia inyectada
 
             PetshopAppTheme {
 
                 LaunchedEffect(firebaseUser) {
-                    if (firebaseUser != null) {
-                        loginViewModel.fetchUserType(firebaseUser.uid)
+                    firebaseUser?.let {
+                        loginViewModel.fetchUserType(it.uid)
                     }
                 }
-
 
                 LaunchedEffect(firebaseUser, uiState.userType) {
                     if (firebaseUser != null && uiState.userType != null) {
@@ -51,7 +50,5 @@ class MainActivity : ComponentActivity() {
                 )
             }
         }
-
-
     }
 }
