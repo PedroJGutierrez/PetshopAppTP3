@@ -126,30 +126,6 @@ ProfileScreen.kt - Gestión de perfil
 SettingsScreen.kt - Configuraciones
 OrdersScreen.kt - Historial de pedidos
 
-🔧 Configuración de Desarrollo
-Variables de Entorno
-Crear archivo local.properties:
-propertiesAPI_BASE_URL="https://api.petlovers.com/"
-API_KEY="your_api_key_here"
-Construcción
-bash# Debug build
-./gradlew assembleDebug
-
-# Release build
-./gradlew assembleRelease
-
-# Ejecutar tests
-./gradlew test
-🧪 Testing
-La aplicación incluye tests unitarios y de integración:
-bash
-# Tests unitarios
-./gradlew testDebugUnitTest
-
-# Tests de instrumentación
-./gradlew connectedAndroidTest
-
-
 👥 Equipo de Desarrollo
 Pedro Gutierrez - Juan Frick - Nicolas Lell
 
