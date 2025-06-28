@@ -108,7 +108,7 @@ app/
 - **Arquitectura**: MVVM + LiveData
 - **Navegación**: Navigation Component
 - **UI**: Material Design Components
-- **Inyección de Dependencias**: Factory Pattern
+- **Inyección de Dependencias: Hilt (basado en Dagger)
 
 ## 📋 Funcionalidades por Pantalla
 
