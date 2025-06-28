@@ -9,7 +9,9 @@ import androidx.compose.runtime.collectAsState
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.rememberNavController
 import com.google.firebase.auth.FirebaseAuth
-import com.proyecto.petshopapp.login.LoginViewModel
+import com.proyecto.petshopapp.ui.login.LoginViewModel
+import com.proyecto.petshopapp.ui.login.LoginViewModelFactory
+import com.proyecto.petshopapp.ui.navigation.NavigationGraph
 import com.proyecto.petshopapp.ui.theme.PetshopAppTheme
 
 class MainActivity : ComponentActivity() {
@@ -18,7 +20,7 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             val navController = rememberNavController()
-            val loginViewModel: LoginViewModel = viewModel()
+            val loginViewModel: LoginViewModel = viewModel(factory = LoginViewModelFactory())
             val firebaseUser = FirebaseAuth.getInstance().currentUser
             val uiState by loginViewModel.uiState.collectAsState()
 
