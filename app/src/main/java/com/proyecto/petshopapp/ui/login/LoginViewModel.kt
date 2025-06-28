@@ -1,21 +1,18 @@
-
 package com.proyecto.petshopapp.ui.login
 
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.auth.EmailAuthProvider
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.proyecto.petshopapp.data.models.LoginRequest
 import com.proyecto.petshopapp.data.remote.AuthApiService
-import com.proyecto.petshopapp.data.remote.NetworkClient
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-
-
+import javax.inject.Inject
 
 data class LoginUiState(
     val isLoading: Boolean = false,
@@ -37,8 +34,8 @@ data class EmailChangeState(
     val errorMessage: String? = null
 )
 
-
-class LoginViewModel(
+@HiltViewModel
+class LoginViewModel @Inject constructor(
     private val firebaseAuth: FirebaseAuth,
     private val db: FirebaseFirestore,
     private val authApiService: AuthApiService
@@ -195,19 +192,5 @@ class LoginViewModel(
         }
         firebaseAuth.addAuthStateListener(listener)
     }
-}
-
-
-class LoginViewModelFactory : ViewModelProvider.Factory {
-    override fun <T : ViewModel> create(modelClass: Class<T>): T {
-        if (modelClass.isAssignableFrom(LoginViewModel::class.java)) {
-            @Suppress("UNCHECKED_CAST")
-            return LoginViewModel(
-                firebaseAuth = FirebaseAuth.getInstance(),
-                db = FirebaseFirestore.getInstance(),
-                authApiService = NetworkClient.authApiService
-            ) as T
-        }
-        throw IllegalArgumentException("Unknown ViewModel class")
-    }
+    fun getCurrentUser() = firebaseAuth.currentUser
 }

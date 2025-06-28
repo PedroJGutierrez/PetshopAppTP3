@@ -2,8 +2,10 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
-    id("kotlin-kapt")
+    alias(libs.plugins.kotlin.ksp)
+    alias(libs.plugins.kotlin.kapt) // ← necesario para Hilt
     id("com.google.gms.google-services")
+    alias(libs.plugins.hilt)
 }
 
 android {
@@ -29,20 +31,34 @@ android {
             )
         }
     }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
+
     kotlinOptions {
         jvmTarget = "11"
     }
+
     buildFeatures {
         compose = true
+    }
+
+    ksp {
+        arg("dagger.hilt.disableModulesHaveInstallInCheck", "true")
+    }
+
+    configurations.all {
+        resolutionStrategy.eachDependency {
+            if (requested.group == "com.squareup" && requested.name == "javapoet") {
+                useVersion("1.13.0")
+            }
+        }
     }
 }
 
 dependencies {
-
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
@@ -52,8 +68,7 @@ dependencies {
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
     implementation(libs.androidx.navigation.compose)
-    implementation(libs.firebase.crashlytics.buildtools)
-    implementation(libs.firebase.auth.ktx)
+
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -61,23 +76,37 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
+
     implementation(libs.accompanist.pager)
     implementation(libs.accompanist.pager.indicators)
+
     implementation(libs.retrofit.core)
     implementation(libs.retrofit.gson)
     implementation(libs.okhttp.logging)
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.lifecycle.viewmodel.compose)
-    implementation(libs.hilt.android)
-    kapt(libs.hilt.compiler)
-    implementation(libs.hilt.navigation.compose)
+
+    // Room con KSP
     implementation(libs.room.runtime)
     implementation(libs.room.ktx)
+    ksp(libs.room.compiler)
+
+    // Lottie para animaciones
     implementation("com.airbnb.android:lottie-compose:6.1.0")
-    kapt(libs.room.compiler)
-    implementation(platform("com.google.firebase:firebase-bom:33.14.0"))
+
+    // Firebase con BOM
+    implementation(platform(libs.firebase.bom))
     implementation("com.google.firebase:firebase-analytics")
-    implementation("com.google.firebase:firebase-auth-ktx")
+    implementation(libs.firebase.auth.ktx)
     implementation(libs.firebase.firestore.ktx)
+
     implementation(libs.material.icons.extended)
+
+    // Hilt con kapt (no KSP)
+    implementation(libs.hilt)
+    kapt(libs.hilt.compiler)
+    implementation(libs.hilt.navigation.compose)
+
+    // JavaPoet (por compatibilidad)
+    implementation("com.squareup:javapoet:1.13.0")
 }
