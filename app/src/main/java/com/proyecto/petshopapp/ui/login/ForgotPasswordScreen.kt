@@ -39,6 +39,7 @@ fun ForgotPasswordScreen(navController: NavController) {
     fun validateEmail(email: String): Boolean {
         return Patterns.EMAIL_ADDRESS.matcher(email).matches()
     }
+    val isFormValid = email.isNotBlank() && validateEmail(email)
 
     LaunchedEffect(showSnackbar) {
         if (showSnackbar) {
@@ -72,11 +73,11 @@ fun ForgotPasswordScreen(navController: NavController) {
                         .verticalScroll(rememberScrollState()),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Spacer(modifier = Modifier.height(120.dp))
+                    Spacer(modifier = Modifier.height(80.dp))
 
                     Text(
                         text = "Forgot\nPassword",
-                        fontSize = 32.sp,
+                        fontSize = 40.sp,
                         fontWeight = FontWeight.Bold,
                         color = Color.Black,
                         textAlign = TextAlign.Start,
@@ -84,10 +85,10 @@ fun ForgotPasswordScreen(navController: NavController) {
                         modifier = Modifier.fillMaxWidth()
                     )
 
-                    Spacer(modifier = Modifier.height(24.dp))
+                    Spacer(modifier = Modifier.height(20.dp))
 
                     Text(
-                        text = "Water is life. Water is a basic human need in various lines of life humans need water...",
+                        text = "Water is life. Water is a basic human need in various lines of life humans need water.",
                         fontSize = 14.sp,
                         color = Color.Gray,
                         textAlign = TextAlign.Start,
@@ -95,7 +96,7 @@ fun ForgotPasswordScreen(navController: NavController) {
                         modifier = Modifier.fillMaxWidth()
                     )
 
-                    Spacer(modifier = Modifier.height(80.dp))
+                    Spacer(modifier = Modifier.height(40.dp))
 
                     OutlinedTextField(
                         value = email,
@@ -106,7 +107,6 @@ fun ForgotPasswordScreen(navController: NavController) {
                             firebaseError = null
                         },
                         label = { Text("Email") },
-                        placeholder = { Text("example@gmail.com") },
                         textStyle = TextStyle(color = if (email.isNotBlank()) PurplePrimary else Color.Gray, fontSize = 16.sp),
                         keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Email),
                         modifier = Modifier.fillMaxWidth(),
@@ -143,42 +143,44 @@ fun ForgotPasswordScreen(navController: NavController) {
                         enabled = !isLoading,
                         contentPadding = PaddingValues(0.dp)
                     ) {
-                        Text("Have an account? ", color = Color.Gray, fontSize = 14.sp)
-                        Text("Login", color = PurplePrimary, fontSize = 14.sp, fontWeight = FontWeight.Medium)
+                        Text("Have an account? ", color = Color.Black, fontSize = 14.sp)
+                        Text("Login", color = PurplePrimary, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
                     }
                 }
-                    Button(
-                        onClick = {
-                            when {
-                                email.isBlank() -> showEmailError = true
-                                !validateEmail(email) -> isEmailValid = false
-                                else -> {
-                                    isLoading = true
-                                    auth.sendPasswordResetEmail(email)
-                                        .addOnCompleteListener { task ->
-                                            isLoading = false
-                                            if (task.isSuccessful) {
-                                                showSnackbar = true
-                                            } else {
-                                                firebaseError = task.exception?.message ?: "Error sending email"
-                                            }
+                Button(
+                    onClick = {
+                        when {
+                            email.isBlank() -> showEmailError = true
+                            !validateEmail(email) -> isEmailValid = false
+                            else -> {
+                                isLoading = true
+                                auth.sendPasswordResetEmail(email)
+                                    .addOnCompleteListener { task ->
+                                        isLoading = false
+                                        if (task.isSuccessful) {
+                                            showSnackbar = true
+                                        } else {
+                                            firebaseError = task.exception?.message ?: "Error sending email"
                                         }
-                                }
+                                    }
                             }
-                        },
-                        enabled = !isLoading,
-                        colors = ButtonDefaults.buttonColors(containerColor = PurplePrimary),
-                        shape = RoundedCornerShape(50),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(50.dp)
-                    ) {
-                        if (isLoading) {
-                            CircularProgressIndicator(color = Color.White, modifier = Modifier.size(24.dp), strokeWidth = 2.dp)
-                        } else {
-                            Text("Next", color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
                         }
+                    },
+                    enabled = isFormValid && !isLoading,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = if (isFormValid) PurplePrimary else Color.LightGray
+                    ),
+                    shape = RoundedCornerShape(50),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(60.dp)
+                ) {
+                    if (isLoading) {
+                        CircularProgressIndicator(color = Color.White, modifier = Modifier.size(24.dp), strokeWidth = 2.dp)
+                    } else {
+                        Text("Next", color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
                     }
+                }
 
             }
         }

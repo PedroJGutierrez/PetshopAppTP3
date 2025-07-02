@@ -117,7 +117,7 @@ fun OnboardingScreen(navController: NavController) {
             shape = RoundedCornerShape(50),
             modifier = Modifier
                 .fillMaxWidth()
-                .height(50.dp)
+                .height(60.dp)
         ) {
             Text(
                 text = if (pagerState.currentPage == pages.lastIndex) "Get Started" else "Next",

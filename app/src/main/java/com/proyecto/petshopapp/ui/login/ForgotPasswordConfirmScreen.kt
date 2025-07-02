@@ -23,13 +23,18 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.proyecto.petshopapp.ui.theme.PurplePrimary
+import com.proyecto.petshopapp.ui.utils.AsteriskPasswordVisualTransformation
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ForgotPasswordConfirmScreen(navController: NavController) {
     var newPassword by remember { mutableStateOf("") }
     var confirmPassword by remember { mutableStateOf("") }
-
+    var passwordVisible by remember { mutableStateOf(false) }
+    val isFormValid =
+        newPassword.isNotBlank() &&
+                confirmPassword.isNotBlank() &&
+                (newPassword == confirmPassword)
     Scaffold(
         containerColor = Color.White
     ) { innerPadding ->
@@ -52,7 +57,7 @@ fun ForgotPasswordConfirmScreen(navController: NavController) {
                         .verticalScroll(rememberScrollState()),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Spacer(modifier = Modifier.height(120.dp))
+                    Spacer(modifier = Modifier.height(80.dp))
 
                     Text(
                         text = "Forgot\nPassword",
@@ -64,7 +69,7 @@ fun ForgotPasswordConfirmScreen(navController: NavController) {
                         modifier = Modifier.fillMaxWidth()
                     )
 
-                    Spacer(modifier = Modifier.height(24.dp))
+                    Spacer(modifier = Modifier.height(20.dp))
 
                     Text(
                         text = "Water is life. Water is a basic human need in various lines of life humans need water...",
@@ -75,7 +80,7 @@ fun ForgotPasswordConfirmScreen(navController: NavController) {
                         modifier = Modifier.fillMaxWidth()
                     )
 
-                    Spacer(modifier = Modifier.height(80.dp))
+                    Spacer(modifier = Modifier.height(40.dp))
 
                     OutlinedTextField(
                         value = newPassword,
@@ -84,7 +89,17 @@ fun ForgotPasswordConfirmScreen(navController: NavController) {
                         textStyle = TextStyle(color = if (newPassword.isNotBlank()) PurplePrimary else Color.Gray,fontSize = 16.sp),
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
                         modifier = Modifier.fillMaxWidth(),
-                        visualTransformation =PasswordVisualTransformation(),
+                        visualTransformation = if (passwordVisible) VisualTransformation.None else AsteriskPasswordVisualTransformation(),
+                        trailingIcon = {
+                            val icon = if (passwordVisible) Icons.Filled.VisibilityOff else Icons.Filled.Visibility
+                            IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                                Icon(
+                                    imageVector = icon,
+                                    contentDescription = null,
+                                    tint = Color.Gray
+                                )
+                            }
+                        },
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedBorderColor = PurplePrimary,
                             unfocusedBorderColor = Color.Gray.copy(alpha = 0.3f),
@@ -109,7 +124,17 @@ fun ForgotPasswordConfirmScreen(navController: NavController) {
 
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
                         modifier = Modifier.fillMaxWidth(),
-                        visualTransformation =PasswordVisualTransformation(),
+                        visualTransformation = if (passwordVisible) VisualTransformation.None else AsteriskPasswordVisualTransformation(),
+                        trailingIcon = {
+                            val icon = if (passwordVisible) Icons.Filled.VisibilityOff else Icons.Filled.Visibility
+                            IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                                Icon(
+                                    imageVector = icon,
+                                    contentDescription = null,
+                                    tint = Color.Gray
+                                )
+                            }
+                        },
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedBorderColor = PurplePrimary,
                             unfocusedBorderColor = Color.Gray.copy(alpha = 0.3f),
@@ -137,22 +162,23 @@ fun ForgotPasswordConfirmScreen(navController: NavController) {
                         onClick = { navController.navigate("login") },
                         contentPadding = PaddingValues(0.dp)
                     ) {
-                        Text("Have an account? ", color = Color.Gray, fontSize = 14.sp)
-                        Text("Login", color = PurplePrimary, fontSize = 14.sp, fontWeight = FontWeight.Medium)
+                        Text("Have an account? ", color = Color.Black, fontSize = 14.sp)
+                        Text("Login", color = PurplePrimary, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
                     }
                 }
 
                 // Botón Reset Password
                 Button(
                     onClick = {
-                        // Lógica para resetear la contraseña
                         navController.navigate("login")
                     },
-                    colors = ButtonDefaults.buttonColors(containerColor = PurplePrimary),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = if (isFormValid) PurplePrimary else Color.LightGray
+                    ),
                     shape = RoundedCornerShape(50),
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(50.dp)
+                        .height(60.dp)
                 ) {
                     Text(
                         text = "Reset Password",

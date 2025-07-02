@@ -18,7 +18,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -28,6 +27,7 @@ import androidx.navigation.NavController
 import com.proyecto.petshopapp.ui.theme.PurplePrimary
 import kotlinx.coroutines.launch
 import com.proyecto.petshopapp.R
+import com.proyecto.petshopapp.ui.utils.AsteriskPasswordVisualTransformation
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -44,6 +44,8 @@ fun LoginScreen(
     val uiState by viewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
     val coroutineScope = rememberCoroutineScope()
+    val isFormValid = email.isNotBlank() && password.isNotBlank() && !showEmailError && !showPasswordError
+
 
     LaunchedEffect(uiState.isSuccess) {
         if (uiState.isSuccess) {
@@ -113,7 +115,6 @@ fun LoginScreen(
                             showEmailError = false
                         },
                         label = { Text("Email") },
-                        placeholder = { Text("example@gmail.com") },
                         isError = showEmailError,
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(12.dp),
@@ -141,12 +142,11 @@ fun LoginScreen(
                             showPasswordError = false
                         },
                         label = { Text("Password") },
-                        placeholder = { Text("••••••••") },
                         isError = showPasswordError,
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(12.dp),
                         textStyle = TextStyle(fontSize = 14.sp, color = if (password.isNotBlank()) PurplePrimary else Color.Gray,),
-                        visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                        visualTransformation = if (passwordVisible) VisualTransformation.None else AsteriskPasswordVisualTransformation(),
                         trailingIcon = {
                             val icon = if (passwordVisible) Icons.Filled.VisibilityOff else Icons.Filled.Visibility
                             IconButton(onClick = { passwordVisible = !passwordVisible }) {
@@ -248,7 +248,7 @@ fun LoginScreen(
                     onClick = { navController.navigate("forgot_password") },
                     contentPadding = PaddingValues(0.dp)
                 ) {
-                    Text("Forgot Password?", color = PurplePrimary, fontSize = 14.sp)
+                    Text("Forgot Password?", color = PurplePrimary, fontSize = 14.sp,fontWeight = FontWeight.SemiBold)
                 }
 
                 Row(
@@ -256,12 +256,12 @@ fun LoginScreen(
                     horizontalArrangement = Arrangement.Center,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text("Don't have an account? ", color = Color.Gray, fontSize = 14.sp)
+                    Text("Don't have an account? ", color = Color.Black, fontSize = 14.sp)
                     TextButton(
                         onClick = { navController.navigate("create_account") },
                         contentPadding = PaddingValues(0.dp)
                     ) {
-                        Text("Create Account", color = PurplePrimary, fontSize = 14.sp)
+                        Text("Create Account", color = PurplePrimary, fontSize = 14.sp,fontWeight = FontWeight.SemiBold)
                     }
                 }
 
@@ -269,15 +269,18 @@ fun LoginScreen(
                     onClick = {
                         showEmailError = email.isBlank()
                         showPasswordError = password.isBlank()
-                        if (!showEmailError && !showPasswordError) {
+                        if (isFormValid) {
                             viewModel.login(email.trim(), password)
                         }
                     },
-                    colors = ButtonDefaults.buttonColors(containerColor = PurplePrimary),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = if (isFormValid) PurplePrimary else Color.LightGray
+                    ),
                     shape = RoundedCornerShape(50),
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(50.dp)
+                        .height(60.dp),
+                    enabled = isFormValid // opcional: deshabilita el botón si no es válido
                 ) {
                     if (uiState.isLoading) {
                         CircularProgressIndicator(
@@ -286,7 +289,11 @@ fun LoginScreen(
                             strokeWidth = 2.dp
                         )
                     } else {
-                        Text("Get Started", color = Color.White, fontSize = 16.sp)
+                        Text(
+                            text = "Get Started",
+                            color = Color.White,
+                            fontSize = 16.sp
+                        )
                     }
                 }
             }
