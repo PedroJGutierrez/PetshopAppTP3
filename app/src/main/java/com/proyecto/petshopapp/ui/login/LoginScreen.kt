@@ -115,17 +115,19 @@ fun LoginScreen(navController: NavController) {
                         isError = showEmailError,
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(12.dp),
-                        textStyle = TextStyle(fontSize = 14.sp, color = Color(0xFFB3B1B0)),
+                        textStyle = TextStyle(fontSize = 14.sp, color = if (email.isNotBlank()) PurplePrimary else Color.Gray),
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedBorderColor = PurplePrimary,
                             unfocusedBorderColor = Color.Gray.copy(alpha = 0.3f),
-                            errorBorderColor = Color.Red,
+                            focusedTextColor = PurplePrimary,
+                            unfocusedTextColor = Color.Gray,
+                            unfocusedLabelColor = Color.Gray,
                             focusedContainerColor = Color.Transparent,
                             unfocusedContainerColor = Color.Transparent
                         )
                     )
                     if (showEmailError) {
-                        Text("Email is required", color = Color.Red, fontSize = 12.sp)
+                        Text("Email is required", color = Color.Red, fontSize = 12.sp,modifier = Modifier.align(Alignment.Start))
                     }
 
                     Spacer(modifier = Modifier.height(16.dp))
@@ -141,7 +143,7 @@ fun LoginScreen(navController: NavController) {
                         isError = showPasswordError,
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(12.dp),
-                        textStyle = TextStyle(fontSize = 14.sp, color = Color(0xFFB3B1B0)),
+                        textStyle = TextStyle(fontSize = 14.sp, color = if (password.isNotBlank()) PurplePrimary else Color.Gray,),
                         visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                         trailingIcon = {
                             val icon = if (passwordVisible) Icons.Filled.VisibilityOff else Icons.Filled.Visibility
@@ -156,18 +158,28 @@ fun LoginScreen(navController: NavController) {
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedBorderColor = PurplePrimary,
                             unfocusedBorderColor = Color.Gray.copy(alpha = 0.3f),
-                            errorBorderColor = Color.Red,
+                            focusedTextColor = PurplePrimary,
+                            unfocusedTextColor = Color.Gray,
+                            unfocusedLabelColor = Color.Gray,
                             focusedContainerColor = Color.Transparent,
                             unfocusedContainerColor = Color.Transparent
                         )
                     )
                     if (showPasswordError) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(top = 4.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.Start
+                        ) {
                             Icon(
                                 painter = painterResource(R.drawable.info_square),
                                 contentDescription = "Info",
                                 tint = Color.Red,
-                                modifier = Modifier.size(16.dp).padding(end = 4.dp)
+                                modifier = Modifier
+                                    .size(16.dp)
+                                    .padding(end = 4.dp)
                             )
                             Text("Required Fields", color = Color.Red, fontSize = 12.sp)
                         }
@@ -260,10 +272,10 @@ fun LoginScreen(navController: NavController) {
                         }
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = PurplePrimary),
-                    shape = RoundedCornerShape(12.dp),
+                    shape = RoundedCornerShape(50),
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(56.dp)
+                        .height(50.dp)
                 ) {
                     if (uiState.isLoading) {
                         CircularProgressIndicator(
