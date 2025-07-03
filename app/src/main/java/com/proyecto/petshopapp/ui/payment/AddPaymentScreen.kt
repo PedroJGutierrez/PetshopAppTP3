@@ -107,8 +107,8 @@ fun AddPaymentScreen(
                         if (input.length <= 5) {
                             viewModel.onExpiryChange(input)
 
-                            val regexFull = Regex("""^(0[1-9]|1[0-2])\/(\d{2})$""")
-                            val regexPartial = Regex("""^(0[1-9]|1[0-2])\/?(\d{0,2})$""")
+                            val regexFull = Regex("""^(0[1-9]|1[0-2])/(\d{2})$""")
+                            val regexPartial = Regex("""^(0[1-9]|1[0-2])/?(\d{0,2})$""")
 
                             expiryError = if (input.isEmpty()) {
                                 false
