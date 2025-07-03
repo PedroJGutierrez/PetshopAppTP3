@@ -1,9 +1,11 @@
 package com.proyecto.petshopapp.ui.payment
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -18,6 +20,7 @@ import com.proyecto.petshopapp.ui.payment.components.SaveButton
 import com.proyecto.petshopapp.ui.payment.components.TopBarWithBack
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import java.util.Calendar
 
 @Composable
 fun AddPaymentScreen(
@@ -47,6 +50,7 @@ fun AddPaymentScreen(
         Box(
             modifier = Modifier
                 .fillMaxSize()
+                .background(Color(0xFFF8F8F8))
                 .padding(paddingValues)
         ) {
             Column(
@@ -114,8 +118,8 @@ fun AddPaymentScreen(
                                 if (regexFull.matches(input)) {
                                     val month = input.substring(0, 2).toInt()
                                     val year = input.substring(3, 5).toInt()
-                                    val currentYear = 25
-                                    val maxYear = 40
+                                    val currentYear = Calendar.getInstance().get(Calendar.YEAR) % 100
+                                    val maxYear = currentYear + 15
                                     !(month in 1..12 && year in currentYear..maxYear)
                                 } else {
                                     true
@@ -140,10 +144,11 @@ fun AddPaymentScreen(
                             cvvError = true
                         }
                     },
-                    keyboardType = KeyboardType.NumberPassword,
+                    keyboardType = KeyboardType.Number,
+                    visualTransformation = PasswordVisualTransformation(),
                     isError = cvvError,
                     supportingText = if (cvvError) "Must be 3 digits" else null,
-                    visualTransformation = PasswordVisualTransformation()
+                    placeholder = "123"
                 )
 
                 Spacer(modifier = Modifier.weight(1f))
@@ -161,13 +166,11 @@ fun AddPaymentScreen(
             }
 
             if (showPopup) {
-
                 LottieSuccessPopup(
                     message = "Payment method saved!",
                     onDismiss = { showPopup = false }
                 )
-                }
-
+            }
         }
     }
 }
