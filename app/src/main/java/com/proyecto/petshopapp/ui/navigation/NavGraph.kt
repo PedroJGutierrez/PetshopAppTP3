@@ -21,6 +21,7 @@ import com.proyecto.petshopapp.ui.screens.SelectPaymentMethodScreen
 import androidx.compose.ui.platform.LocalContext
 import com.proyecto.petshopapp.OnboardingScreen
 import com.proyecto.petshopapp.data.local.DatabaseProvider
+import com.proyecto.petshopapp.ui.home.BestSellersScreen
 import com.proyecto.petshopapp.ui.home.CartScreen
 import com.proyecto.petshopapp.ui.home.CartViewModel
 import com.proyecto.petshopapp.ui.home.FavoritesScreen
@@ -132,6 +133,9 @@ fun NavigationGraph(
                     navController.navigate("home")
                 }
             )
+        }
+        composable("best_sellers") {
+            BestSellersScreen(navController, loginViewModel)
         }
         composable("faq") {
             FAQScreen(navController = navController)

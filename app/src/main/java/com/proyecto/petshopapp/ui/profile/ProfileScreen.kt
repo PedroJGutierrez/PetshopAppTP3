@@ -3,11 +3,10 @@
 package com.proyecto.petshopapp.ui.profile
 
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.*
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
@@ -21,17 +20,22 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.zIndex
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import androidx.navigation.compose.currentBackStackEntryAsState
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.SetOptions
@@ -39,7 +43,6 @@ import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import com.proyecto.petshopapp.R
 import com.proyecto.petshopapp.data.models.Product
-import com.proyecto.petshopapp.ui.home.BottomNavItem
 import com.proyecto.petshopapp.ui.login.LoginViewModel
 import com.proyecto.petshopapp.ui.theme.PurplePrimary
 import kotlinx.coroutines.delay
@@ -60,19 +63,18 @@ fun ProfileScreen(
     var showSaved by remember { mutableStateOf(true) }
     var sellerTab by remember { mutableStateOf("Product") }
     var favorites by remember { mutableStateOf<List<Product>>(emptyList()) }
-
-    var isEditingProfile by remember { mutableStateOf(false) }
-
-    var selectedBackground by remember { mutableStateOf("gris") }
-    var showBackgroundMenu by remember { mutableStateOf(false) }
-    var showSuccessIcon by remember { mutableStateOf(false) }
+    val uiState by loginViewModel.uiState.collectAsState()
+    val isReseller = uiState.userType == "Reseller"
     var nombre by remember { mutableStateOf("") }
     var username by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
-    val uiState by loginViewModel.uiState.collectAsState()
-    val isReseller = uiState.userType == "Reseller"
+    var isEditingProfile by remember { mutableStateOf(false) }
+    var showSuccessIcon by remember { mutableStateOf(false) }
 
     var showTooltip by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) {
+        profileViewModel.loadUserProfile()
+    }
     LaunchedEffect(isEditingProfile) {
         if (isEditingProfile) {
             val uid = FirebaseAuth.getInstance().currentUser?.uid
@@ -82,6 +84,14 @@ fun ProfileScreen(
                 username = snapshot.getString("username") ?: ""
                 email = snapshot.getString("email") ?: ""
             }
+        }
+    }
+
+    LaunchedEffect(user) {
+        user?.let {
+            username = it.username
+            nombre = it.nombre
+            email = it.email
         }
     }
     val dummyProducts = listOf(
@@ -102,7 +112,7 @@ fun ProfileScreen(
     fun guardarCambiosPerfil() {
         val uid = FirebaseAuth.getInstance().currentUser?.uid ?: return
         if (nombre.isBlank() || username.isBlank()) {
-            println(" No se puede guardar un nombre o username vacío")
+            println("Cannot save an empty name or username")
             return
         }
 
@@ -122,10 +132,6 @@ fun ProfileScreen(
         }
     }
 
-    LaunchedEffect(Unit) {
-        profileViewModel.loadUserProfile()
-    }
-
     LaunchedEffect(userEmail) {
         FirebaseAuth.getInstance().currentUser?.uid?.let { uid ->
             cargarFavoritos(uid)
@@ -142,54 +148,84 @@ fun ProfileScreen(
 
     Box(modifier = Modifier.fillMaxSize()) {
         Column(modifier = Modifier.fillMaxSize()) {
-
+            Spacer(modifier = Modifier.height(30.dp))
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = 16.dp)
+                    .padding(horizontal = 16.dp, vertical = 24.dp)
             ) {
+                val profileSelected = !isSellerMode
+                val sellerSelected = isSellerMode
+
+                val profileBgColor by animateColorAsState(
+                    targetValue = if (profileSelected) PurplePrimary else Color(0xFFF0F0F0),
+                    animationSpec = tween(300)
+                )
+
+                val sellerBgColor by animateColorAsState(
+                    targetValue = if (sellerSelected) PurplePrimary else Color(0xFFF0F0F0),
+                    animationSpec = tween(300)
+                )
+
+                val profileTextColor by animateColorAsState(
+                    targetValue = if (profileSelected) Color.White else Color.Gray,
+                    animationSpec = tween(300)
+                )
+
+                val sellerTextColor by animateColorAsState(
+                    targetValue = if (sellerSelected) Color.White else Color.Gray,
+                    animationSpec = tween(300)
+                )
+
                 Row(
-                    modifier = Modifier.align(Alignment.Center),
-                    horizontalArrangement = Arrangement.Center
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
                 ) {
+                    Spacer(modifier = Modifier.weight(1f))
 
-                    Button(
-                        onClick = { isSellerMode = false },
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = if (!isSellerMode) PurplePrimary else Color.LightGray
-                        ),
-                        shape = RoundedCornerShape(50)
+                    Box(
+                        modifier = Modifier
+                            .shadow(1.dp, RoundedCornerShape(50))
+                            .background(Color(0xFFF0F0F0), RoundedCornerShape(50))
                     ) {
-                        Text("Profile", color = Color.White)
-                    }
-
-                    Spacer(modifier = Modifier.width(8.dp))
-
-
-                    Box(contentAlignment = Alignment.TopCenter) {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            // Botón Profile
                             Button(
-                                onClick = {
-                                    if (isReseller) {
-                                        isSellerMode = true
-                                    } else {
-                                        showTooltip = true
-                                    }
-                                },
+                                onClick = { isSellerMode = false },
                                 colors = ButtonDefaults.buttonColors(
-                                    containerColor = if (isSellerMode) PurplePrimary else Color.LightGray
+                                    containerColor = profileBgColor,
+                                    contentColor = profileTextColor
                                 ),
-                                shape = RoundedCornerShape(50)
+                                shape = RoundedCornerShape(50),
+                                elevation = null,
+                                modifier = Modifier.defaultMinSize(minWidth = 100.dp)
                             ) {
-                                Text("Seller Mode", color = Color.White)
+                                Text("Profile", fontWeight = FontWeight.Medium)
                             }
 
-                            AnimatedVisibility(
-                                visible = showTooltip,
-                                enter = fadeIn() + slideInVertically(initialOffsetY = { -20 }),
-                                exit = fadeOut() + slideOutVertically(targetOffsetY = { -20 })
-                            ) {
-                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            // Botón Seller Mode con tooltip debajo
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Button(
+                                    onClick = {
+                                        if (isReseller) isSellerMode = true else showTooltip = true
+                                    },
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = sellerBgColor,
+                                        contentColor = sellerTextColor
+                                    ),
+                                    shape = RoundedCornerShape(50),
+                                    elevation = null,
+                                    modifier = Modifier.defaultMinSize(minWidth = 100.dp)
+                                ) {
+                                    Text("Seller Mode", fontWeight = FontWeight.Medium)
+                                }
+
+                                if (showTooltip) {
+                                    Spacer(modifier = Modifier.height(8.dp))
+
                                     Surface(
                                         color = Color.Black,
                                         shape = RoundedCornerShape(8.dp),
@@ -199,11 +235,13 @@ fun ProfileScreen(
                                         Text(
                                             text = "This option is only enabled for resellers.",
                                             color = Color.White,
-                                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                                            modifier = Modifier.padding(
+                                                horizontal = 12.dp,
+                                                vertical = 6.dp
+                                            ),
                                             fontSize = 12.sp
                                         )
                                     }
-
 
                                     Canvas(modifier = Modifier.size(12.dp)) {
                                         drawPath(
@@ -220,88 +258,133 @@ fun ProfileScreen(
                             }
                         }
                     }
-                }
 
+                    Spacer(modifier = Modifier.width(12.dp))
 
-                IconButton(
-                    onClick = {
-                        navController.navigate("settings")
-                    },
-                    modifier = Modifier
-                        .align(Alignment.CenterEnd)
-                        .padding(end = 16.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Settings,
-                        contentDescription = "Ajustes"
-                    )
+                    // Ícono de ajustes a la derecha
+                    IconButton(
+                        onClick = { navController.navigate("settings") }
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Settings,
+                            contentDescription = "Ajustes"
+                        )
+                    }
                 }
             }
 
 
+            // --- IMAGEN PERFIL ---
             if (!isSellerMode) {
-
-                Box(modifier = Modifier.fillMaxWidth().height(240.dp)) {
+                // Imagen de fondo + perfil + nombre
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(160.dp)
+                        .padding(horizontal = 24.dp),
+                    contentAlignment = Alignment.BottomCenter
+                ) {
+                    // Banner (imagen de fondo)
                     Image(
                         painter = painterResource(R.drawable.gris),
                         contentDescription = null,
                         contentScale = ContentScale.Crop,
-                        modifier = Modifier.fillMaxSize()
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(159.dp)
+                            .clip(RoundedCornerShape(12.dp))
+                            .align(Alignment.TopCenter)
                     )
 
-                    Column(
-                        modifier = Modifier
-                            .align(Alignment.TopCenter)
-                            .padding(top = 32.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Image(
-                            painter = painterResource(id = selectedPhoto),
-                            contentDescription = "Profile Photo",
+                    // Ícono para editar banner, arriba a la derecha del banner
+                    if (isEditingProfile) {
+                        Box(
                             modifier = Modifier
-                                .size(120.dp)
-                                .clip(CircleShape)
-                        )
+                                .size(24.dp)
+                                .align(Alignment.TopEnd)
+                                .background(Color.White, shape = CircleShape)
+                                .clickable { /* Acción para cambiar banner */ },
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                painter = painterResource(id = R.drawable.icono_edit),
+                                contentDescription = "Editar Banner",
+                                modifier = Modifier.size(16.dp)
+                            )
+                        }
+                    }
+
+                    // Imagen de perfil + nombre
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        modifier = Modifier
+                            .offset(y = 60.dp)
+                            .zIndex(1f)
+                    ) {
+                        Box(
+                            modifier = Modifier.size(width = 100.dp, height = 80.dp)
+                        ) {
+                            Image(
+                                painter = painterResource(id = selectedPhoto),
+                                contentDescription = "Profile Photo",
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .clip(RoundedCornerShape(12.dp))
+                            )
+
+                            if (isEditingProfile) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(24.dp)
+                                        .align(Alignment.TopEnd)
+                                        .background(Color.White, shape = CircleShape)
+                                        .clickable { showPhotoMenu = true },
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Icon(
+                                        painter = painterResource(id = R.drawable.icono_edit),
+                                        contentDescription = "Editar Banner",
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                }
+                            }
+                        }
 
                         Spacer(modifier = Modifier.height(8.dp))
 
                         Text(
-                            text = username,
+                            text = username.ifBlank { "Cargando..." },
                             fontSize = 20.sp,
                             fontWeight = FontWeight.Bold,
                             color = Color.Black,
                             fontFamily = poppinsFont,
-                            modifier = Modifier.padding(top = 4.dp)
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier
+                                .background(Color.White.copy(alpha = 0.8f))
+                                .padding(horizontal = 8.dp, vertical = 2.dp)
                         )
-
-
-                        if (isEditingProfile) {
-                            IconButton(
-                                onClick = { showPhotoMenu = true },
-                                modifier = Modifier
-                                    .offset(x = (40).dp, y = (-100).dp)
-                                    .size(28.dp)
-                                    .background(Color.White, shape = CircleShape)
-                                    .border(1.dp, Color.Gray, CircleShape)
-                            ) {
-                                Icon(Icons.Default.Edit, contentDescription = null, modifier = Modifier.size(16.dp))
-                            }
-                        }
                     }
+
+                    Spacer(modifier = Modifier.height(20.dp))
+
+
                 }
 
                 if (showPhotoMenu) {
                     Box(
                         modifier = Modifier
                             .fillMaxSize()
-                            .background(Color(0x80000000))
-                            .clickable { showPhotoMenu = false }
+                        // Quitamos el fondo semitransparente aquí, para que no oscurezca toda la pantalla
                     ) {
                         Card(
                             modifier = Modifier
                                 .align(Alignment.Center)
                                 .width(300.dp)
-                                .height(200.dp),
+                                .height(220.dp) // un poco más alto para el botón cerrar
+                                .clickable(
+                                    indication = null,
+                                    interactionSource = remember { MutableInteractionSource() }
+                                ) { /* Consume click para no cerrar al clickear dentro del Card */ },
                             shape = RoundedCornerShape(16.dp),
                             colors = CardDefaults.cardColors(containerColor = Color.White),
                             elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
@@ -310,11 +393,28 @@ fun ProfileScreen(
                                 modifier = Modifier
                                     .fillMaxSize()
                                     .padding(16.dp),
-                                verticalArrangement = Arrangement.Center,
+                                verticalArrangement = Arrangement.Top,
                                 horizontalAlignment = Alignment.CenterHorizontally
                             ) {
-                                Text("Elegí tu foto", fontWeight = FontWeight.Bold, fontSize = 16.sp)
-                                Spacer(modifier = Modifier.height(12.dp))
+                                // Botón para cerrar arriba a la derecha
+                                Box(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    contentAlignment = Alignment.TopEnd
+                                ) {
+                                    IconButton(onClick = { showPhotoMenu = false }) {
+                                        Icon(
+                                            imageVector = Icons.Default.Close,
+                                            contentDescription = "Cerrar menú"
+                                        )
+                                    }
+                                }
+
+                                Text(
+                                    "Elegí tu foto",
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 16.sp,
+                                    modifier = Modifier.padding(bottom = 12.dp)
+                                )
 
                                 val photoOptions = listOf(
                                     "foto1" to R.drawable.foto1,
@@ -347,38 +447,48 @@ fun ProfileScreen(
                     }
                 }
 
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(80.dp))
 
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 32.dp),
-                    horizontalArrangement = Arrangement.SpaceEvenly
+                Box(
+                    modifier = Modifier.fillMaxWidth(),
                 ) {
-                    Button(
-                        onClick = {
-                            showSaved = true
-                            isEditingProfile = false
-                        },
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = if (showSaved && !isEditingProfile) PurplePrimary else Color.LightGray
-                        ),
-                        shape = RoundedCornerShape(50)
+                    Row(
+                        modifier = Modifier.align(Alignment.Center),
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text("Saved", color = Color.White)
-                    }
+                        Button(
+                            onClick = {
+                                showSaved = true
+                                isEditingProfile = false
+                            },
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = if (showSaved && !isEditingProfile) PurplePrimary else Color.LightGray
+                            ),
+                            shape = RoundedCornerShape(30),
+                            modifier = Modifier
+                                .widthIn(min = 78.dp)
+                                .height(47.dp)
+                        ) {
+                            Text("Saved", color = Color.White)
+                        }
 
-                    Button(
-                        onClick = {
-                            showSaved = true
-                            isEditingProfile = true
-                        },
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = if (isEditingProfile) PurplePrimary else Color.LightGray
-                        ),
-                        shape = RoundedCornerShape(50)
-                    ) {
-                        Text("Edit Profile", color = Color.White)
+                        Spacer(modifier = Modifier.width(12.dp))
+
+                        Button(
+                            onClick = {
+                                showSaved = true
+                                isEditingProfile = true
+                            },
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = if (isEditingProfile) PurplePrimary else Color.LightGray
+                            ),
+                            shape = RoundedCornerShape(30),
+                            modifier = Modifier
+                                .widthIn(min = 78.dp)
+                                .height(47.dp)
+                        ) {
+                            Text("Edit Profile", color = Color.White)
+                        }
                     }
                 }
 
@@ -395,7 +505,10 @@ fun ProfileScreen(
                             onValueChange = { nombre = it },
                             label = { Text("Nombre", color = Color.Black) },
                             placeholder = {
-                                if (nombre.isBlank()) Text("Pon tu nombre completo", color = Color.Gray)
+                                if (nombre.isBlank()) Text(
+                                    "Pon tu nombre completo",
+                                    color = Color.Gray
+                                )
                             },
                             modifier = Modifier.fillMaxWidth(),
                             textStyle = LocalTextStyle.current.copy(color = Color.Black)
@@ -406,7 +519,10 @@ fun ProfileScreen(
                             onValueChange = { username = it },
                             label = { Text("Usuario", color = Color.Black) },
                             placeholder = {
-                                if (username.isBlank()) Text("Ej: pittashop_user", color = Color.Gray)
+                                if (username.isBlank()) Text(
+                                    "Ej: pittashop_user",
+                                    color = Color.Gray
+                                )
                             },
                             modifier = Modifier.fillMaxWidth(),
                             textStyle = LocalTextStyle.current.copy(color = Color.Black)
@@ -456,50 +572,64 @@ fun ProfileScreen(
                             }
                         }
                     }
-                } else if (showSaved) {
-                    Column(modifier = Modifier.padding(horizontal = 16.dp)) {
-                        if (favorites.isEmpty()) {
-                            Text(
-                                text = "No hay productos guardados.",
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(top = 32.dp),
-                                textAlign = TextAlign.Center,
-                                fontWeight = FontWeight.Medium
-                            )
-                        } else {
-                            LazyRow(
-                                modifier = Modifier.padding(top = 8.dp),
-                                horizontalArrangement = Arrangement.spacedBy(12.dp)
-                            ) {
-                                items(favorites) { product ->
-                                    FavoriteProductCard(
-                                        product = product,
-                                        navController = navController,
-                                        loginViewModel = loginViewModel,
-                                        onFavoriteChanged = {
-                                            FirebaseAuth.getInstance().currentUser?.uid?.let { uid ->
-                                                cargarFavoritos(uid)
-                                            }
+                } else if (showSaved) Column(modifier = Modifier.fillMaxWidth()) {
+                    if (favorites.isEmpty()) {
+                        Text(
+                            text = "No saved products.",
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(top = 32.dp),
+                            textAlign = TextAlign.Center,
+                            fontWeight = FontWeight.Medium
+                        )
+                    } else {
+                        Spacer(modifier = Modifier.width(80.dp))
+
+                        LazyRow(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp, vertical = 8.dp),
+                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            items(favorites) { product ->
+                                FavoriteProductCard(
+                                    product = product,
+                                    navController = navController,
+                                    loginViewModel = loginViewModel,
+                                    onFavoriteChanged = {
+                                        FirebaseAuth.getInstance().currentUser?.uid?.let { uid ->
+                                            cargarFavoritos(uid)
                                         }
-                                    )
-                                }
+                                    }
+                                )
                             }
                         }
                     }
                 }
-            }
-            else {
+            } else {
                 // SELLER MODE
-                Image(painter = painterResource(R.drawable.naranja), contentDescription = null,
-                    modifier = Modifier.fillMaxWidth().height(120.dp))
-                Image(painter = painterResource(R.drawable.p), contentDescription = null,
-                    modifier = Modifier.size(100.dp).clip(CircleShape).align(Alignment.CenterHorizontally))
-                Text("Pittashop", fontSize = 20.sp, fontWeight = FontWeight.Bold,
-                    modifier = Modifier.align(Alignment.CenterHorizontally))
+                Image(
+                    painter = painterResource(R.drawable.naranja), contentDescription = null,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(120.dp)
+                )
+                Image(
+                    painter = painterResource(R.drawable.p), contentDescription = null,
+                    modifier = Modifier
+                        .size(100.dp)
+                        .clip(CircleShape)
+                        .align(Alignment.CenterHorizontally)
+                )
+                Text(
+                    "Pittashop", fontSize = 20.sp, fontWeight = FontWeight.Bold,
+                    modifier = Modifier.align(Alignment.CenterHorizontally)
+                )
 
                 Row(
-                    modifier = Modifier.fillMaxWidth().padding(16.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
                     horizontalArrangement = Arrangement.SpaceEvenly
                 ) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -517,7 +647,9 @@ fun ProfileScreen(
                 }
 
                 Row(
-                    modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 8.dp),
                     horizontalArrangement = Arrangement.SpaceEvenly
                 ) {
                     Button(
@@ -534,34 +666,63 @@ fun ProfileScreen(
                     "Product" -> {
                         LazyRow(modifier = Modifier.padding(horizontal = 16.dp)) {
                             items(dummyProducts) { product ->
-                                ProductCard(product = product, navController = navController, loginViewModel = loginViewModel)
+                                ProductCard(
+                                    product = product,
+                                    navController = navController,
+                                    loginViewModel = loginViewModel
+                                )
                             }
                         }
                     }
+
                     "Sold" -> {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally,
-                            modifier = Modifier.fillMaxWidth().padding(32.dp)) {
-                            Icon(Icons.Default.Warning, contentDescription = null,
-                                tint = Color.Gray, modifier = Modifier.size(48.dp))
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(32.dp)
+                        ) {
+                            Icon(
+                                Icons.Default.Warning, contentDescription = null,
+                                tint = Color.Gray, modifier = Modifier.size(48.dp)
+                            )
                             Spacer(modifier = Modifier.height(8.dp))
                             Text("No tiene ventas realizadas.", color = Color.Gray)
                         }
                     }
+
                     "Stats" -> {
                         Row(
-                            modifier = Modifier.fillMaxWidth().padding(32.dp),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(32.dp),
                             horizontalArrangement = Arrangement.SpaceEvenly
                         ) {
                             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                Box(modifier = Modifier.height(60.dp).width(20.dp).background(PurplePrimary))
+                                Box(
+                                    modifier = Modifier
+                                        .height(60.dp)
+                                        .width(20.dp)
+                                        .background(PurplePrimary)
+                                )
                                 Text("Ventas")
                             }
                             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                Box(modifier = Modifier.height(40.dp).width(20.dp).background(PurplePrimary))
+                                Box(
+                                    modifier = Modifier
+                                        .height(40.dp)
+                                        .width(20.dp)
+                                        .background(PurplePrimary)
+                                )
                                 Text("Compras")
                             }
                             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                Box(modifier = Modifier.height(30.dp).width(20.dp).background(PurplePrimary))
+                                Box(
+                                    modifier = Modifier
+                                        .height(30.dp)
+                                        .width(20.dp)
+                                        .background(PurplePrimary)
+                                )
                                 Text("Ganancia")
                             }
                         }
@@ -685,71 +846,81 @@ fun BottomNavigationBar(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val userType = uiState.userType ?: "Usuario"
+    var expanded by remember { mutableStateOf(false) }
 
-    if (userType == "Revendedor") {
-        var expanded by remember { mutableStateOf(false) }
+    val currentDestination = navController.currentBackStackEntryAsState().value?.destination?.route
 
+    if (userType == "Reseller") {
         Column(modifier = modifier.fillMaxWidth()) {
             AnimatedVisibility(visible = expanded) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 32.dp)
-                        .background(Color.White),
-                    horizontalArrangement = Arrangement.SpaceEvenly
+                        .background(Color(0xFFF8F8F8))
+                        .padding(horizontal = 32.dp, vertical = 12.dp),
+                    horizontalArrangement = Arrangement.SpaceEvenly,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    BottomNavItem(
+                    BottomNavItemCustom(
                         icon = Icons.Default.History,
-                        isSelected = false,
-                        onClick = { /* TODO: Historial */ },
+                        isSelected = currentDestination == "records",
+                        onClick = {
+                            expanded = false
+                            navController.navigate("records")
+                        },
                         label = "Records"
                     )
-                    BottomNavItem(
+                    BottomNavItemCustom(
                         icon = Icons.Outlined.LocalShipping,
-                        isSelected = false,
-                        onClick = { /* TODO: Gestión pedidos */ },
+                        isSelected = currentDestination == "orders",
+                        onClick = {
+                            expanded = false
+                            navController.navigate("orders")
+                        },
                         label = "Orders"
                     )
                 }
             }
 
             Surface(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(Color.White),
-                shadowElevation = 8.dp
+                modifier = Modifier.fillMaxWidth(),
+                color = Color(0xFFF8F8F8),
+                shadowElevation = 0.dp,
+                shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
             ) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(vertical = 12.dp, horizontal = 32.dp),
-                    horizontalArrangement = Arrangement.SpaceEvenly
+                        .height(100.dp)
+                        .padding(horizontal = 16.dp),
+                    horizontalArrangement = Arrangement.SpaceEvenly,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    BottomNavItem(
-                        icon = Icons.Default.Home,
-                        isSelected = false,
+                    BottomNavItemCustom(
+                        iconRes = R.drawable.icono_home,
+                        isSelected = currentDestination == "home",
                         onClick = { navController.navigate("home") },
-                        label = "Home Page"
+                        label = "Home"
                     )
-                    BottomNavItem(
-                        icon = Icons.Default.Favorite,
-                        isSelected = false,
+                    BottomNavItemCustom(
+                        iconRes = R.drawable.icono_favorito,
+                        isSelected = currentDestination == "favorites",
                         onClick = { navController.navigate("favorites") },
                         label = "Favorites"
                     )
-                    BottomNavItem(
-                        icon = Icons.Default.ShoppingCart,
-                        isSelected = false,
+                    BottomNavItemCustom(
+                        iconRes = R.drawable.icono_carrito,
+                        isSelected = currentDestination == "cart",
                         onClick = { navController.navigate("cart") },
                         label = "Cart"
                     )
-                    BottomNavItem(
-                        icon = Icons.Default.Person,
-                        isSelected = true,
-                        onClick = { },
+                    BottomNavItemCustom(
+                        iconRes = R.drawable.icono_profile,
+                        isSelected = currentDestination == "profile",
+                        onClick = { navController.navigate("profile") },
                         label = "Profile"
                     )
-                    BottomNavItem(
+                    BottomNavItemCustom(
                         icon = if (expanded) Icons.Default.KeyboardArrowDown else Icons.Default.KeyboardArrowUp,
                         isSelected = false,
                         onClick = { expanded = !expanded },
@@ -761,40 +932,87 @@ fun BottomNavigationBar(
     } else {
         Surface(
             modifier = modifier.fillMaxWidth(),
-            color = Color.White,
-            shadowElevation = 8.dp
+            color = Color(0xFFF8F8F8),
+            shadowElevation = 0.dp,
+            shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
         ) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(vertical = 12.dp, horizontal = 32.dp),
-                horizontalArrangement = Arrangement.SpaceEvenly
+                    .height(100.dp) // altura más grande
+                    .padding(horizontal = 16.dp),
+                horizontalArrangement = Arrangement.SpaceEvenly,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                BottomNavItem(
-                    icon = Icons.Default.Home,
-                    isSelected = false,
+                BottomNavItemCustom(
+                    iconRes = R.drawable.icono_home,
+                    isSelected = currentDestination == "home",
                     onClick = { navController.navigate("home") },
-                    label = "Home Page"
+                    label = "Home"
                 )
-                BottomNavItem(
-                    icon = Icons.Default.Favorite,
-                    isSelected = false,
+                BottomNavItemCustom(
+                    iconRes = R.drawable.icono_favorito,
+                    isSelected = currentDestination == "favorites",
                     onClick = { navController.navigate("favorites") },
-                    label = "Favorites"
+                    label = "Fa vorites"
                 )
-                BottomNavItem(
-                    icon = Icons.Default.ShoppingCart,
-                    isSelected = false,
+                BottomNavItemCustom(
+                    iconRes = R.drawable.icono_carrito,
+                    isSelected = currentDestination == "cart",
                     onClick = { navController.navigate("cart") },
                     label = "Cart"
                 )
-                BottomNavItem(
-                    icon = Icons.Default.Person,
-                    isSelected = true,
-                    onClick = { },
+                BottomNavItemCustom(
+                    iconRes = R.drawable.icono_profile,
+                    isSelected = currentDestination == "profile",
+                    onClick = { navController.navigate("profile") },
                     label = "Profile"
                 )
             }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun BottomNavItemCustom(
+    icon: ImageVector? = null,
+    iconRes: Int? = null,
+    isSelected: Boolean,
+    onClick: () -> Unit,
+    label: String
+) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier
+            .clickable { onClick() }
+    ) {
+        if (iconRes != null) {
+            Icon(
+                painter = painterResource(id = iconRes),
+                contentDescription = label,
+                tint = if (isSelected) PurplePrimary else Color.Gray,
+                modifier = Modifier.size(24.dp)
+            )
+        } else if (icon != null) {
+            Icon(
+                imageVector = icon,
+                contentDescription = label,
+                tint = if (isSelected) PurplePrimary else Color.Gray,
+                modifier = Modifier.size(24.dp)
+            )
+        }
+
+        Spacer(modifier = Modifier.height(4.dp))
+
+        if (isSelected) {
+            Box(
+                modifier = Modifier
+                    .size(6.dp)
+                    .background(PurplePrimary, shape = CircleShape)
+            )
+        } else {
+            Spacer(modifier = Modifier.height(6.dp))
         }
     }
 }
@@ -817,11 +1035,14 @@ fun FavoriteProductCard(
     val uiState by loginViewModel.uiState.collectAsState()
     val isReseller = uiState.userType == "Reseller"
     val finalPrice = if (isReseller) product.price * 0.85 else product.price
-
+    val screenWidth = LocalConfiguration.current.screenWidthDp.dp
+    val cardSpacing = 12.dp
+    val horizontalPadding = 16.dp * 2
+    val cardWidth = (screenWidth - horizontalPadding - cardSpacing) / 2
     Card(
         modifier = Modifier
-            .width(147.dp)
-            .height(200.dp),
+            .width(cardWidth)
+            .height(220.dp),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = Color(0xFFF9F9F9)),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
@@ -831,7 +1052,7 @@ fun FavoriteProductCard(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(12.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
+                horizontalAlignment = Alignment.Start
             ) {
                 Image(
                     painter = painterResource(
@@ -915,31 +1136,31 @@ fun FavoriteProductCard(
                             .document(product.id.toString())
 
                         if (isFavorite) {
-                            favRef.delete()
-                                .addOnSuccessListener {
-                                    isFavorite = false
-                                    onFavoriteChanged()
-                                }
+                            favRef.delete().addOnSuccessListener {
+                                isFavorite = false
+                                onFavoriteChanged()
+                            }
                         } else {
-                            favRef.set(product, SetOptions.merge())
-                                .addOnSuccessListener {
-                                    isFavorite = true
-                                    onFavoriteChanged()
-                                }
+                            favRef.set(product, SetOptions.merge()).addOnSuccessListener {
+                                isFavorite = true
+                                onFavoriteChanged()
+                            }
                         }
                     }
                 },
                 modifier = Modifier
                     .align(Alignment.TopEnd)
                     .padding(6.dp)
-                    .size(24.dp)
+                    .size(28.dp)
             ) {
                 Icon(
-                    imageVector = Icons.Default.Favorite,
+                    painter = painterResource(id = R.drawable.icono_favorito),
                     contentDescription = "Favorito",
-                    tint = if (isFavorite) Color.Red else Color.Gray
+                    tint = if (isFavorite) Color.Red else Color.Gray,
+                    modifier = Modifier.size(28.dp)
                 )
             }
         }
     }
+
 }

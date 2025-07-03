@@ -274,25 +274,25 @@ fun LoginScreen(
                         }
                     },
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = if (isFormValid) PurplePrimary else Color.LightGray
+                        containerColor = if (isFormValid) PurplePrimary else Color(0xFFE5E4E3)
                     ),
-                    shape = RoundedCornerShape(50),
+                    shape = RoundedCornerShape(50.dp),
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(60.dp),
-                    enabled = isFormValid // opcional: deshabilita el botón si no es válido
+                    enabled = isFormValid
                 ) {
                     if (uiState.isLoading) {
                         CircularProgressIndicator(
                             color = Color.White,
                             modifier = Modifier.size(24.dp),
-                            strokeWidth = 2.dp
                         )
                     } else {
                         Text(
                             text = "Get Started",
                             color = Color.White,
-                            fontSize = 16.sp
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.SemiBold
                         )
                     }
                 }

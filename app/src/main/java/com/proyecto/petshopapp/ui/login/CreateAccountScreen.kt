@@ -117,7 +117,7 @@ fun CreateAccountScreen(navController: NavController) {
                         shape = RoundedCornerShape(12.dp),
                         textStyle = TextStyle(
                             fontSize = 14.sp,
-                            color = if (email.isNotBlank()) PurplePrimary else Color.Gray
+                            color = if (username.isNotBlank()) PurplePrimary else Color.Gray
                         ),
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedBorderColor = PurplePrimary,
