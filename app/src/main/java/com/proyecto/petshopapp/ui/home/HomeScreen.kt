@@ -3,21 +3,18 @@ package com.proyecto.petshopapp.ui.home
 import android.app.Activity
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -33,9 +30,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.zIndex
 import androidx.navigation.NavController
-import com.google.firebase.auth.FirebaseAuth
 import com.proyecto.petshopapp.R
 import com.proyecto.petshopapp.data.models.Product
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -43,8 +38,8 @@ import com.proyecto.petshopapp.ui.login.LoginViewModel
 import androidx.compose.material.icons.outlined.LocalShipping
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.TextOverflow
-import com.google.firebase.Firebase
-import com.google.firebase.firestore.firestore
+import androidx.navigation.compose.currentBackStackEntryAsState
+import com.proyecto.petshopapp.ui.theme.PurplePrimary
 
 
 @Composable
@@ -81,68 +76,45 @@ fun HomeScreen(navController: NavController, loginViewModel: LoginViewModel) {
         (context as? Activity)?.moveTaskToBack(true)
     }
 
-    val filteredProducts = if (selectedCategory == "All") {
+    val filteredProducts = if (selectedCategory.isEmpty() || selectedCategory == "All") {
         products
     } else {
         products.filter { it.category.equals(selectedCategory, ignoreCase = true) }
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
-        Column(
+        LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Color.White)
-                .verticalScroll(rememberScrollState())
+                .background(Color.White),
+            contentPadding = PaddingValues(bottom = 120.dp) // espacio para BottomNavBar fijo
         ) {
-            Spacer(modifier = Modifier.height(16.dp))
-
-            if (userType == "Reseller") {
-                Surface(
-                    color = Color(0xFF4CAF50), // verde
-                    shape = RoundedCornerShape(16.dp),
-                    modifier = Modifier
-                        .padding(horizontal = 16.dp)
-                        .fillMaxWidth()
-                ) {
-                    Text(
-                        text = "Wholesale Discounts",
-                        color = Color.White,
-                        modifier = Modifier.padding(12.dp),
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.SemiBold
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(16.dp))
+            item {
+                Spacer(modifier = Modifier.height(26.dp))
+                HeaderSection(
+                    location = selectedLocation,
+                    onLocationClick = { showLocationModal = true },
+                    navController = navController
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+                PromotionalBanner()
+                Spacer(modifier = Modifier.height(10.dp))
+                CategorySection(
+                    selectedCategory = selectedCategory,
+                    categories = listOf("", "Food", "Toys", "Accessories"),
+                    onCategorySelect = { selectedCategory = it },
+                    onViewAllClick = { showCategoryModal = true }
+                )
+                Spacer(modifier = Modifier.height(24.dp))
             }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            HeaderSection(
-                location = selectedLocation,
-                onLocationClick = { showLocationModal = true },
-                navController = navController
-            )
-
-            Spacer(modifier = Modifier.height(20.dp))
-            PromotionalBanner()
-            Spacer(modifier = Modifier.height(24.dp))
-
-            CategorySection(
-                selectedCategory = selectedCategory,
-                categories = listOf("All", "Food", "Toys", "Accessories"),
-                onCategorySelect = { selectedCategory = it },
-                onViewAllClick = { showCategoryModal = true }
-            )
-
-            Spacer(modifier = Modifier.height(24.dp))
-            BestSellerSection(products = filteredProducts, navController = navController, loginViewModel = loginViewModel)
-
-
-            Spacer(modifier = Modifier.height(32.dp))
-
-
-            Spacer(modifier = Modifier.height(100.dp))
+            item {
+                BestSellerSection(
+                    products = filteredProducts,
+                    navController = navController,
+                    loginViewModel = loginViewModel,
+                    onViewAllClick = { navController.navigate("best_sellers") }
+                )
+            }
         }
 
         BottomNavigationBar(
@@ -151,12 +123,7 @@ fun HomeScreen(navController: NavController, loginViewModel: LoginViewModel) {
             modifier = Modifier.align(Alignment.BottomCenter)
         )
 
-        AnimatedVisibility(
-            visible = showLocationModal,
-            enter = slideInVertically(initialOffsetY = { it }),
-            exit = slideOutVertically(targetOffsetY = { it }),
-            modifier = Modifier.zIndex(1f)
-        ) {
+        if (showLocationModal) {
             LocationModal(
                 locations = userAddresses,
                 selectedLocation = selectedLocation,
@@ -168,27 +135,15 @@ fun HomeScreen(navController: NavController, loginViewModel: LoginViewModel) {
             )
         }
 
-        AnimatedVisibility(
-            visible = showLocationModal,
-            enter = slideInVertically(initialOffsetY = { it }),
-            exit = slideOutVertically(targetOffsetY = { it }),
-            modifier = Modifier.zIndex(1f)
-        ) {
-            LocationModal(
-                locations = userAddresses,
-                selectedLocation = selectedLocation,
-                onLocationSelect = { newLocation ->
-                    selectedLocation = newLocation
-                    showLocationModal = false
-
-
-                    val uid = FirebaseAuth.getInstance().currentUser?.uid
-                    uid?.let {
-                        Firebase.firestore.collection("users").document(it)
-                            .update("selectedLocation", newLocation)
-                    }
+        if (showCategoryModal) {
+            CategoryModal(
+                categories = listOf("", "Food", "Toys", "Accessories"),
+                selectedCategory = selectedCategory,
+                onCategorySelect = {
+                    selectedCategory = it
+                    showCategoryModal = false
                 },
-                onDismiss = { showLocationModal = false }
+                onDismiss = { showCategoryModal = false }
             )
         }
     }
@@ -204,18 +159,19 @@ fun HeaderSection(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.clickable { onLocationClick() }
+            modifier = Modifier
+                .weight(1f)
+                .clickable { onLocationClick() }
         ) {
             Icon(
                 imageVector = Icons.Default.LocationOn,
                 contentDescription = null,
                 tint = Color.Gray,
-                modifier = Modifier.size(16.dp)
+                modifier = Modifier.size(20.dp)
             )
             Spacer(modifier = Modifier.width(4.dp))
             Text(
@@ -223,33 +179,33 @@ fun HeaderSection(
                 fontSize = 14.sp,
                 color = Color.Black,
                 maxLines = 1,
-                modifier = Modifier.widthIn(max = 180.dp),
-                overflow = TextOverflow.Ellipsis
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.fillMaxWidth()
             )
             Spacer(modifier = Modifier.width(4.dp))
             Icon(
                 imageVector = Icons.Default.KeyboardArrowDown,
                 contentDescription = null,
                 tint = Color.Gray,
-                modifier = Modifier.size(16.dp)
+                modifier = Modifier.size(20.dp)
             )
         }
 
         Row {
             IconButton(onClick = { navController.navigate("search") }) {
-                Icon(
-                    imageVector = Icons.Default.Search,
+                Image(
+                    painter = painterResource(id = R.drawable.icono_buscar),
                     contentDescription = "Search",
-                    tint = Color.Black
+                    modifier = Modifier.size(20.dp)
                 )
             }
             IconButton(onClick = {
                 navController.navigate("notifications")
             }) {
-                Icon(
-                    imageVector = Icons.Default.Notifications,
+                Image(
+                    painter = painterResource(id = R.drawable.icono_noti),
                     contentDescription = "Notifications",
-                    tint = Color.Black
+                    modifier = Modifier.size(20.dp)
                 )
             }
         }
@@ -259,18 +215,18 @@ fun HeaderSection(
 
 @Composable
 fun PromotionalBanner() {
-    Card(
+    Box(
         modifier = Modifier
             .fillMaxWidth()
-            .height(160.dp)
-            .padding(horizontal = 16.dp),
-        shape = RoundedCornerShape(16.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+            .height(240.dp)
+            .padding(horizontal = 16.dp)
     ) {
         Box(
-            modifier = Modifier.fillMaxSize()
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(160.dp)
+                .align(Alignment.Center)
         ) {
-            // Background Image
             Image(
                 painter = painterResource(id = R.drawable.banner_background),
                 contentDescription = null,
@@ -281,44 +237,45 @@ fun PromotionalBanner() {
             Row(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(16.dp),
+                    .padding(horizontal = 16.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Product Image
-                Image(
-                    painter = painterResource(id = R.drawable.banner_product),
-                    contentDescription = null,
-                    modifier = Modifier
-                        .size(80.dp)
-                        .clip(RoundedCornerShape(12.dp)),
-                    contentScale = ContentScale.Fit
-                )
-
-                Spacer(modifier = Modifier.width(16.dp))
+                Spacer(modifier = Modifier.weight(0.45f))
 
                 Column(
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier
+                        .weight(0.55f)
+                        .padding(start = 24.dp)
                 ) {
                     Text(
-                        text = "Royal Canin",
+                        text = "Royal Canin \nAdult Pomeranian",
                         color = Color.White,
-                        fontSize = 18.sp,
+                        fontSize = 14.sp,
                         fontWeight = FontWeight.Bold
                     )
-                    Text(
-                        text = "Adult Pomeranian",
-                        color = Color.White,
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Medium
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
+                    Spacer(modifier = Modifier.height(4.dp))
                     Text(
                         text = "Get an interesting promo here, without conditions",
-                        color = Color.White.copy(alpha = 0.9f),
+                        color = Color.White,
                         fontSize = 12.sp
                     )
                 }
             }
+        }
+
+        Box(
+            modifier = Modifier
+                .align(Alignment.CenterStart)
+                .padding(start = 0.dp)
+        ) {
+            Image(
+                painter = painterResource(id = R.drawable.banner_product),
+                contentDescription = null,
+                modifier = Modifier
+                    .size(240.dp)
+                    .offset(x = (-16).dp),
+                contentScale = ContentScale.Fit
+            )
         }
     }
 }
@@ -345,7 +302,8 @@ fun CategorySection(
             TextButton(onClick = onViewAllClick) {
                 Text(
                     text = "View All",
-                    color = Color(0xFF8B5CF6)
+                    color = Color(0xFF8B5CF6),
+                    fontSize = 14.sp
                 )
             }
         }
@@ -353,12 +311,15 @@ fun CategorySection(
         Spacer(modifier = Modifier.height(12.dp))
 
         LazyRow(
+            modifier = Modifier.fillMaxWidth(),
+            contentPadding = PaddingValues(end = 32.dp),
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            items(categories) { category ->
+            itemsIndexed(categories) { index, category ->
                 CategoryChip(
                     text = category,
                     isSelected = category == selectedCategory,
+                    isFirst = index == 0,
                     onClick = { onCategorySelect(category) }
                 )
             }
@@ -366,23 +327,40 @@ fun CategorySection(
     }
 }
 
+
 @Composable
 fun CategoryChip(
     text: String,
     isSelected: Boolean,
+    isFirst: Boolean,
     onClick: () -> Unit
 ) {
     Surface(
-        modifier = Modifier.clickable { onClick() },
-        shape = RoundedCornerShape(20.dp),
-        color = if (isSelected) Color(0xFF8B5CF6) else Color(0xFFF5F5F5)
+        modifier = Modifier
+            .clickable { onClick() },
+        shape = RoundedCornerShape(12.dp),
+        color = if (isSelected) Color(0xFF8B5CF6) else Color(0xFFF3F4F6)
     ) {
-        Text(
-            text = text,
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-            color = if (isSelected) Color.White else Color.Gray,
-            fontSize = 14.sp
-        )
+        Row(
+            modifier = Modifier
+                .padding(horizontal = if (isFirst) 14.dp else 20.dp, vertical = 10.dp)
+                .wrapContentWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = text,
+                color = if (isSelected) Color.White else Color.Gray,
+                fontSize = 14.sp
+            )
+            if (isFirst) {
+                Icon(
+                    painter = painterResource(id = R.drawable.icono_swap),
+                    contentDescription = "Swap icon",
+                    tint = if (isSelected) Color.White else Color.Black,
+                    modifier = Modifier.size(18.dp)
+                )
+            }
+        }
     }
 }
 
@@ -390,18 +368,49 @@ fun CategoryChip(
 fun BestSellerSection(
     products: List<Product>,
     navController: NavController,
-    loginViewModel: LoginViewModel
+    loginViewModel: LoginViewModel,
+    onViewAllClick: () -> Unit = {
+        navController.navigate("best_sellers")
+    }
 ) {
     Column(modifier = Modifier.padding(horizontal = 16.dp)) {
-        // ...
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "Best Sellers",
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color.Black
+            )
+            TextButton(onClick = onViewAllClick) {
+                Text(
+                    text = "View All",
+                    color = Color(0xFF8B5CF6),
+                    fontSize = 14.sp
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(12.dp))
+
         LazyVerticalGrid(
-            columns = GridCells.Fixed(2),
+            columns = GridCells.Adaptive(minSize = 160.dp),
             horizontalArrangement = Arrangement.spacedBy(12.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
-            modifier = Modifier.height(300.dp)
+            modifier = Modifier
+                .fillMaxWidth()
+                .heightIn(min = 240.dp, max = 800.dp)
         ) {
             items(products) { product ->
-                ProductCard(product = product, navController = navController, loginViewModel = loginViewModel)
+                ProductCard(
+                    product = product,
+                    navController = navController,
+                    loginViewModel = loginViewModel
+                )
             }
         }
     }
@@ -424,8 +433,7 @@ fun ProductCard(product: Product, navController: NavController, loginViewModel: 
             .width(147.dp)
             .height(200.dp),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFFF9F9F9)),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        colors = CardDefaults.cardColors(containerColor = Color(0xFFF8F8F8)),
     ) {
         Column(
             modifier = Modifier
@@ -466,7 +474,7 @@ fun ProductCard(product: Product, navController: NavController, loginViewModel: 
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
                         text = "$${String.format("%.2f", discountedPrice).replace('.', ',')}",
-                        fontSize = 16.sp,
+                        fontSize = 20.sp,
                         fontWeight = FontWeight.Bold,
                         color = Color.Black
                     )
@@ -478,12 +486,18 @@ fun ProductCard(product: Product, navController: NavController, loginViewModel: 
                             shape = RoundedCornerShape(4.dp),
                             modifier = Modifier.height(20.dp)
                         ) {
-                            Text(
-                                text = "15% OFF",
-                                color = Color.White,
-                                fontSize = 10.sp,
-                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
-                            )
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxHeight()
+                                    .padding(horizontal = 6.dp),
+                                contentAlignment = Alignment.TopCenter
+                            ) {
+                                Text(
+                                    text = "15% OFF",
+                                    color = Color.White,
+                                    fontSize = 10.sp
+                                )
+                            }
                         }
                     }
                 }
@@ -510,7 +524,6 @@ fun ProductCard(product: Product, navController: NavController, loginViewModel: 
 }
 
 
-
 @Composable
 fun BottomNavigationBar(
     navController: NavController,
@@ -519,71 +532,81 @@ fun BottomNavigationBar(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val userType = uiState.userType ?: "Usuario"
+    var expanded by remember { mutableStateOf(false) }
+
+    val currentDestination = navController.currentBackStackEntryAsState().value?.destination?.route
 
     if (userType == "Reseller") {
-        var expanded by remember { mutableStateOf(false) }
-
         Column(modifier = modifier.fillMaxWidth()) {
             AnimatedVisibility(visible = expanded) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 32.dp)
-                        .background(Color.White),
-                    horizontalArrangement = Arrangement.SpaceEvenly
+                        .background(Color(0xFFF8F8F8))
+                        .padding(horizontal = 32.dp, vertical = 12.dp),
+                    horizontalArrangement = Arrangement.SpaceEvenly,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    BottomNavItem(
+                    BottomNavItemCustom(
                         icon = Icons.Default.History,
-                        isSelected = false,
-                        onClick = { navController.navigate("records") },
+                        isSelected = currentDestination == "records",
+                        onClick = {
+                            expanded = false
+                            navController.navigate("records")
+                        },
                         label = "Records"
                     )
-                    BottomNavItem(
+                    BottomNavItemCustom(
                         icon = Icons.Outlined.LocalShipping,
-                        isSelected = false,
-                        onClick = { navController.navigate("orders") },
+                        isSelected = currentDestination == "orders",
+                        onClick = {
+                            expanded = false
+                            navController.navigate("orders")
+                        },
                         label = "Orders"
                     )
                 }
             }
 
             Surface(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(Color.White),
-                shadowElevation = 8.dp
+                modifier = Modifier.fillMaxWidth(),
+                color = Color(0xFFF8F8F8),
+                shadowElevation = 0.dp,
+                shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
             ) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(vertical = 12.dp, horizontal = 32.dp),
-                    horizontalArrangement = Arrangement.SpaceEvenly
+                        .height(100.dp)
+                        .padding(horizontal = 16.dp),
+                    horizontalArrangement = Arrangement.SpaceEvenly,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    BottomNavItem(
-                        icon = Icons.Default.Home,
-                        isSelected = true,
-                        onClick = { },
-                        label = "Home Page"
+                    BottomNavItemCustom(
+                        iconRes = R.drawable.icono_home,
+                        isSelected = currentDestination == "home",
+                        onClick = { navController.navigate("home") },
+                        label = "Home"
                     )
-                    BottomNavItem(
-                        icon = Icons.Default.Favorite,
-                        isSelected = false,
+                    BottomNavItemCustom(
+                        iconRes = R.drawable.icono_favorito,
+                        isSelected = currentDestination == "favorites",
                         onClick = { navController.navigate("favorites") },
                         label = "Favorites"
                     )
-                    BottomNavItem(
-                        icon = Icons.Default.ShoppingCart,
-                        isSelected = false,
+                    BottomNavItemCustom(
+                        iconRes = R.drawable.icono_carrito,
+                        isSelected = currentDestination == "cart",
                         onClick = { navController.navigate("cart") },
                         label = "Cart"
                     )
-                    BottomNavItem(
-                        icon = Icons.Default.Person,
-                        isSelected = false,
+                    BottomNavItemCustom(
+                        iconRes = R.drawable.icono_profile,
+                        isSelected = currentDestination == "profile",
                         onClick = { navController.navigate("profile") },
                         label = "Profile"
                     )
-                    BottomNavItem(
+                    BottomNavItemCustom(
                         icon = if (expanded) Icons.Default.KeyboardArrowDown else Icons.Default.KeyboardArrowUp,
                         isSelected = false,
                         onClick = { expanded = !expanded },
@@ -595,36 +618,39 @@ fun BottomNavigationBar(
     } else {
         Surface(
             modifier = modifier.fillMaxWidth(),
-            color = Color.White,
-            shadowElevation = 8.dp
+            color = Color(0xFFF8F8F8),
+            shadowElevation = 0.dp,
+            shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
         ) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(vertical = 12.dp, horizontal = 32.dp),
-                horizontalArrangement = Arrangement.SpaceEvenly
+                    .height(100.dp) // altura más grande
+                    .padding(horizontal = 16.dp),
+                horizontalArrangement = Arrangement.SpaceEvenly,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                BottomNavItem(
-                    icon = Icons.Default.Home,
-                    isSelected = true,
-                    onClick = { },
-                    label = "Home Page"
+                BottomNavItemCustom(
+                    iconRes = R.drawable.icono_home,
+                    isSelected = currentDestination == "home",
+                    onClick = { navController.navigate("home") },
+                    label = "Home"
                 )
-                BottomNavItem(
-                    icon = Icons.Default.Favorite,
-                    isSelected = false,
+                BottomNavItemCustom(
+                    iconRes = R.drawable.icono_favorito,
+                    isSelected = currentDestination == "favorites",
                     onClick = { navController.navigate("favorites") },
                     label = "Favorites"
                 )
-                BottomNavItem(
-                    icon = Icons.Default.ShoppingCart,
-                    isSelected = false,
+                BottomNavItemCustom(
+                    iconRes = R.drawable.icono_carrito,
+                    isSelected = currentDestination == "cart",
                     onClick = { navController.navigate("cart") },
                     label = "Cart"
                 )
-                BottomNavItem(
-                    icon = Icons.Default.Person,
-                    isSelected = false,
+                BottomNavItemCustom(
+                    iconRes = R.drawable.icono_profile,
+                    isSelected = currentDestination == "profile",
                     onClick = { navController.navigate("profile") },
                     label = "Profile"
                 )
@@ -633,44 +659,46 @@ fun BottomNavigationBar(
     }
 }
 
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun BottomNavItem(
-    icon: ImageVector,
+fun BottomNavItemCustom(
+    icon: ImageVector? = null,
+    iconRes: Int? = null,
     isSelected: Boolean,
     onClick: () -> Unit,
     label: String
 ) {
-    val tooltipState = rememberTooltipState()
-
-    TooltipBox(
-        positionProvider = TooltipDefaults.rememberPlainTooltipPositionProvider(),
-        tooltip = {
-            Surface(
-                shape = RoundedCornerShape(4.dp),
-                color = Color.DarkGray
-            ) {
-                Text(
-                    text = label,
-                    modifier = Modifier.padding(8.dp),
-                    color = Color.White,
-                    fontSize = 12.sp
-                )
-            }
-        },
-        state = tooltipState,
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier
+            .clickable { onClick() }
     ) {
-        IconButton(
-            onClick = onClick
-        ) {
+        if (iconRes != null) {
+            Icon(
+                painter = painterResource(id = iconRes),
+                contentDescription = label,
+                tint = if (isSelected) PurplePrimary else Color.Gray,
+                modifier = Modifier.size(24.dp)
+            )
+        } else if (icon != null) {
             Icon(
                 imageVector = icon,
                 contentDescription = label,
-                tint = if (isSelected) Color(0xFF8B5CF6) else Color.Gray,
+                tint = if (isSelected) PurplePrimary else Color.Gray,
                 modifier = Modifier.size(24.dp)
             )
+        }
+
+        Spacer(modifier = Modifier.height(4.dp))
+
+        if (isSelected) {
+            Box(
+                modifier = Modifier
+                    .size(6.dp)
+                    .background(PurplePrimary, shape = CircleShape)
+            )
+        } else {
+            Spacer(modifier = Modifier.height(6.dp))
         }
     }
 }

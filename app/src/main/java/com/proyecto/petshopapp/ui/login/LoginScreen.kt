@@ -3,11 +3,14 @@ package com.proyecto.petshopapp.ui.login
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.*
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -15,7 +18,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -25,6 +27,7 @@ import androidx.navigation.NavController
 import com.proyecto.petshopapp.ui.theme.PurplePrimary
 import kotlinx.coroutines.launch
 import com.proyecto.petshopapp.R
+import com.proyecto.petshopapp.ui.utils.AsteriskPasswordVisualTransformation
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -41,6 +44,8 @@ fun LoginScreen(
     val uiState by viewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
     val coroutineScope = rememberCoroutineScope()
+    val isFormValid = email.isNotBlank() && password.isNotBlank() && !showEmailError && !showPasswordError
+
 
     LaunchedEffect(uiState.isSuccess) {
         if (uiState.isSuccess) {
@@ -61,277 +66,235 @@ fun LoginScreen(
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { innerPadding ->
-        Column(
+        Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Color.White)
                 .padding(innerPadding)
-                .padding(horizontal = 24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+                .background(Color.White)
         ) {
-            Spacer(modifier = Modifier.height(60.dp))
-
-            // Title
-            Text(
-                text = "Hello,\nWelcome Back!",
-                fontSize = 28.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color.Black,
-                textAlign = TextAlign.Center,
-                lineHeight = 32.sp
-            )
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Text(
-                text = "Sign in to continue to your account",
-                fontSize = 14.sp,
-                color = Color.Gray,
-                textAlign = TextAlign.Center
-            )
-
-            Spacer(modifier = Modifier.height(40.dp))
-
-            // Email Field
-            OutlinedTextField(
-                value = email,
-                onValueChange = {
-                    email = it
-                    showEmailError = false
-                },
-                label = { Text("Email") },
-                placeholder = { Text("example@gmail.com") },
-                textStyle = TextStyle(color = Color.Black, fontSize = 16.sp),
-                isError = showEmailError,
-                enabled = !uiState.isLoading,
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = PurplePrimary,
-                    focusedLabelColor = PurplePrimary,
-                    unfocusedBorderColor = Color.Gray.copy(alpha = 0.3f),
-                    errorBorderColor = Color.Red,
-                    errorLabelColor = Color.Red,
-                    focusedContainerColor = Color.Transparent,
-                    unfocusedContainerColor = Color.Transparent
-                )
-            )
-            if (showEmailError) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 4.dp),
-                    horizontalArrangement = Arrangement.Start
-                ) {
-                    Text("Email is required", color = Color.Red, fontSize = 12.sp)
-                }
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Password Field
-            OutlinedTextField(
-                value = password,
-                onValueChange = {
-                    password = it
-                    showPasswordError = false
-                },
-                label = { Text("Password") },
-                placeholder = { Text("••••••••") },
-                textStyle = TextStyle(color = Color.Black, fontSize = 16.sp),
-                visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
-                trailingIcon = {
-                    val icon = if (passwordVisible) Icons.Filled.VisibilityOff else Icons.Filled.Visibility
-                    IconButton(onClick = { passwordVisible = !passwordVisible }) {
-                        Icon(
-                            imageVector = icon,
-                            contentDescription = if (passwordVisible) "Hide password" else "Show password",
-                            tint = Color.Gray
-                        )
-                    }
-                },
-                isError = showPasswordError,
-                enabled = !uiState.isLoading,
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = PurplePrimary,
-                    focusedLabelColor = PurplePrimary,
-                    unfocusedBorderColor = Color.Gray.copy(alpha = 0.3f),
-                    errorBorderColor = Color.Red,
-                    errorLabelColor = Color.Red,
-                    focusedContainerColor = Color.Transparent,
-                    unfocusedContainerColor = Color.Transparent
-                )
-            )
-            if (showPasswordError) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 4.dp),
-                    horizontalArrangement = Arrangement.Start
-                ) {
-                    Text("Password is required", color = Color.Red, fontSize = 12.sp)
-                }
-            }
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            // Forgot Password
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.End
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxWidth()
+                        .verticalScroll(rememberScrollState()),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Spacer(modifier = Modifier.height(40.dp))
+                    Text(
+                        text = "Hello,\n\nWelcome Back!",
+                        fontSize = 40.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.Black,
+                        textAlign = TextAlign.Start,
+                        modifier = Modifier.fillMaxWidth(),
+                        lineHeight = 32.sp
+                    )
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Text(
+                        text = "Water is life. Water is a basic human need. In various lines of life, humans need water.",
+                        fontSize = 14.sp,
+                        color = Color.Gray,
+                        textAlign = TextAlign.Start,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+
+                    Spacer(modifier = Modifier.height(30.dp))
+
+                    OutlinedTextField(
+                        value = email,
+                        onValueChange = {
+                            email = it
+                            showEmailError = false
+                        },
+                        label = { Text("Email") },
+                        isError = showEmailError,
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(12.dp),
+                        textStyle = TextStyle(fontSize = 14.sp, color = if (email.isNotBlank()) PurplePrimary else Color.Gray),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = PurplePrimary,
+                            unfocusedBorderColor = Color.Gray.copy(alpha = 0.3f),
+                            focusedTextColor = PurplePrimary,
+                            unfocusedTextColor = Color.Gray,
+                            unfocusedLabelColor = Color.Gray,
+                            focusedContainerColor = Color.Transparent,
+                            unfocusedContainerColor = Color.Transparent
+                        )
+                    )
+                    if (showEmailError) {
+                        Text("Email is required", color = Color.Red, fontSize = 12.sp,modifier = Modifier.align(Alignment.Start))
+                    }
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    OutlinedTextField(
+                        value = password,
+                        onValueChange = {
+                            password = it
+                            showPasswordError = false
+                        },
+                        label = { Text("Password") },
+                        isError = showPasswordError,
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(12.dp),
+                        textStyle = TextStyle(fontSize = 14.sp, color = if (password.isNotBlank()) PurplePrimary else Color.Gray,),
+                        visualTransformation = if (passwordVisible) VisualTransformation.None else AsteriskPasswordVisualTransformation(),
+                        trailingIcon = {
+                            val icon = if (passwordVisible) Icons.Filled.VisibilityOff else Icons.Filled.Visibility
+                            IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                                Icon(
+                                    imageVector = icon,
+                                    contentDescription = null,
+                                    tint = Color.Gray
+                                )
+                            }
+                        },
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = PurplePrimary,
+                            unfocusedBorderColor = Color.Gray.copy(alpha = 0.3f),
+                            focusedTextColor = PurplePrimary,
+                            unfocusedTextColor = Color.Gray,
+                            unfocusedLabelColor = Color.Gray,
+                            focusedContainerColor = Color.Transparent,
+                            unfocusedContainerColor = Color.Transparent
+                        )
+                    )
+                    if (showPasswordError) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(top = 4.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.Start
+                        ) {
+                            Icon(
+                                painter = painterResource(R.drawable.info_square),
+                                contentDescription = "Info",
+                                tint = Color.Red,
+                                modifier = Modifier
+                                    .size(16.dp)
+                                    .padding(end = 4.dp)
+                            )
+                            Text("Required Fields", color = Color.Red, fontSize = 12.sp)
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(24.dp))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        HorizontalDivider(modifier = Modifier.weight(1f), color = Color.LightGray)
+                        Text("or", color = Color.LightGray, modifier = Modifier.padding(horizontal = 12.dp))
+                        HorizontalDivider(modifier = Modifier.weight(1f), color = Color.LightGray)
+                    }
+
+                    Spacer(modifier = Modifier.height(24.dp))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        OutlinedButton(
+                            onClick = {},
+                            modifier = Modifier.weight(1f).height(56.dp),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = ButtonDefaults.outlinedButtonColors(
+                                containerColor = Color.White,
+                                contentColor = Color(0xFF337EFE)
+                            ),
+                            border = BorderStroke(1.dp, Color.Gray.copy(alpha = 0.3f))
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(
+                                    painter = painterResource(R.drawable.google),
+                                    contentDescription = "Google",
+                                    modifier = Modifier.size(24.dp),
+                                    tint = Color.Unspecified
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text("Google")
+                            }
+                        }
+
+                        OutlinedButton(
+                            onClick = {},
+                            modifier = Modifier.weight(1f).height(56.dp),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = ButtonDefaults.outlinedButtonColors(
+                                containerColor = Color.White,
+                                contentColor = Color(0xFF337EFE)
+                            ),
+                            border = BorderStroke(1.dp, Color.Gray.copy(alpha = 0.3f))
+                        ) {
+                            Text("Facebook")
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(8.dp))
+                }
+
+
                 TextButton(
                     onClick = { navController.navigate("forgot_password") },
-                    enabled = !uiState.isLoading,
                     contentPadding = PaddingValues(0.dp)
                 ) {
-                    Text(
-                        "Forgot Password?",
-                        color = PurplePrimary,
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Medium
-                    )
+                    Text("Forgot Password?", color = PurplePrimary, fontSize = 14.sp,fontWeight = FontWeight.SemiBold)
                 }
-            }
 
-            Spacer(modifier = Modifier.height(32.dp))
-
-            // Login Button
-            Button(
-                onClick = {
-                    showEmailError = email.isBlank()
-                    showPasswordError = password.isBlank()
-
-                    if (!showEmailError && !showPasswordError) {
-                        viewModel.login(email.trim(), password)
-                    }
-                },
-                enabled = !uiState.isLoading,
-                colors = ButtonDefaults.buttonColors(containerColor = PurplePrimary),
-                shape = RoundedCornerShape(12.dp),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp)
-            ) {
-                if (uiState.isLoading) {
-                    CircularProgressIndicator(
-                        color = Color.White,
-                        modifier = Modifier.size(24.dp),
-                        strokeWidth = 2.dp
-                    )
-                } else {
-                    Text(
-                        "Get Started",
-                        color = Color.White,
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.SemiBold
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(32.dp))
-
-            // Social Login Buttons
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                // Google Button
-                OutlinedButton(
-                    onClick = { /* TODO: Implement Google login */ },
-                    enabled = !uiState.isLoading,
-                    colors = ButtonDefaults.outlinedButtonColors(
-                        containerColor = Color.White,
-                        contentColor = Color.Black
-                    ),
-                    border = BorderStroke(1.dp, Color.Gray.copy(alpha = 0.3f)),
-                    shape = RoundedCornerShape(12.dp),
-                    modifier = Modifier
-                        .weight(1f)
-                        .height(56.dp)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.Center
+                    Text("Don't have an account? ", color = Color.Black, fontSize = 14.sp)
+                    TextButton(
+                        onClick = { navController.navigate("create_account") },
+                        contentPadding = PaddingValues(0.dp)
                     ) {
-                        // Google Icon
-                        Icon(
-                            painter = painterResource(R.drawable.google),
-                            contentDescription = "Google",
-                            modifier = Modifier.size(24.dp),
-                            tint = Color.Unspecified
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            "Google",
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.Medium
-                        )
+                        Text("Create Account", color = PurplePrimary, fontSize = 14.sp,fontWeight = FontWeight.SemiBold)
                     }
                 }
 
-                // Facebook Button
-                OutlinedButton(
-                    onClick = { /* TODO: Implement Facebook login */ },
-                    enabled = !uiState.isLoading,
-                    colors = ButtonDefaults.outlinedButtonColors(
-                        containerColor = Color.White,
-                        contentColor = Color.Black
+                Button(
+                    onClick = {
+                        showEmailError = email.isBlank()
+                        showPasswordError = password.isBlank()
+                        if (isFormValid) {
+                            viewModel.login(email.trim(), password)
+                        }
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = if (isFormValid) PurplePrimary else Color(0xFFE5E4E3)
                     ),
-                    border = BorderStroke(1.dp, Color.Gray.copy(alpha = 0.3f)),
-                    shape = RoundedCornerShape(12.dp),
+                    shape = RoundedCornerShape(50.dp),
                     modifier = Modifier
-                        .weight(1f)
-                        .height(56.dp)
+                        .fillMaxWidth()
+                        .height(60.dp),
+                    enabled = isFormValid
                 ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.Center
-                    ) {
-                        // Facebook Icon
-                        Icon(
-                            painter = painterResource(R.drawable.facebook),
-                            contentDescription = "Facebook",
+                    if (uiState.isLoading) {
+                        CircularProgressIndicator(
+                            color = Color.White,
                             modifier = Modifier.size(24.dp),
-                            tint = Color.Unspecified
                         )
-                        Spacer(modifier = Modifier.width(8.dp))
+                    } else {
                         Text(
-                            "Facebook",
+                            text = "Get Started",
+                            color = Color.White,
                             fontSize = 16.sp,
-                            fontWeight = FontWeight.Medium
+                            fontWeight = FontWeight.SemiBold
                         )
                     }
-                }
-            }
-
-            Spacer(modifier = Modifier.weight(1f))
-
-            // Create Account
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 40.dp),
-                horizontalArrangement = Arrangement.Center
-            ) {
-                Text(
-                    "Don't have an account? ",
-                    color = Color.Gray,
-                    fontSize = 14.sp
-                )
-                TextButton(
-                    onClick = { navController.navigate("create_account") },
-                    enabled = !uiState.isLoading,
-                    contentPadding = PaddingValues(0.dp)
-                ) {
-                    Text(
-                        "Create Account",
-                        color = PurplePrimary,
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Medium
-                    )
                 }
             }
         }

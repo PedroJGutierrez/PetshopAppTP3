@@ -2,8 +2,10 @@ package com.proyecto.petshopapp.ui.login
 
 import android.util.Patterns
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -37,8 +39,8 @@ fun ForgotPasswordScreen(navController: NavController) {
     fun validateEmail(email: String): Boolean {
         return Patterns.EMAIL_ADDRESS.matcher(email).matches()
     }
+    val isFormValid = email.isNotBlank() && validateEmail(email)
 
-    // Mostrar Snackbar y navegar si éxito
     LaunchedEffect(showSnackbar) {
         if (showSnackbar) {
             scope.launch {
@@ -53,126 +55,98 @@ fun ForgotPasswordScreen(navController: NavController) {
         snackbarHost = { SnackbarHost(snackbarHostState) },
         containerColor = Color.White
     ) { innerPadding ->
-        Column(
+        Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-                .padding(horizontal = 32.dp)
-                .padding(top = 120.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+                .padding(horizontal = 24.dp)
         ) {
-            // Título
-            Text(
-                text = "Forgot\nPassword",
-                fontSize = 32.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color.Black,
-                textAlign = TextAlign.Center,
-                lineHeight = 38.sp
-            )
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            // Subtítulo
-            Text(
-                text = "Water is life. Water is a basic human need in various lines of life humans need water...",
-                fontSize = 14.sp,
-                color = Color.Gray,
-                textAlign = TextAlign.Center,
-                lineHeight = 20.sp,
-                modifier = Modifier.padding(horizontal = 16.dp)
-            )
-
-            Spacer(modifier = Modifier.height(80.dp))
-
-            // Campo de email
-            OutlinedTextField(
-                value = email,
-                onValueChange = {
-                    email = it.trim()
-                    showEmailError = false
-                    isEmailValid = true
-                    firebaseError = null
-                },
-                label = { Text("Email") },
-                placeholder = { Text("example@gmail.com") },
-                textStyle = TextStyle(color = Color.Black, fontSize = 16.sp),
-                keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Email),
-                modifier = Modifier.fillMaxWidth(),
-                isError = showEmailError || !isEmailValid,
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = PurplePrimary,
-                    focusedLabelColor = PurplePrimary,
-                    unfocusedBorderColor = Color.Gray.copy(alpha = 0.3f),
-                    errorBorderColor = Color.Red,
-                    errorLabelColor = Color.Red,
-                    focusedContainerColor = Color.Transparent,
-                    unfocusedContainerColor = Color.Transparent
-                ),
-                shape = RoundedCornerShape(12.dp)
-            )
-
-            // Mostrar errores
-            when {
-                showEmailError -> {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(top = 4.dp),
-                        horizontalArrangement = Arrangement.Start
-                    ) {
-                        Text("Email is required", color = Color.Red, fontSize = 12.sp)
-                    }
-                }
-                !isEmailValid -> {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(top = 4.dp),
-                        horizontalArrangement = Arrangement.Start
-                    ) {
-                        Text("Invalid email format", color = Color.Red, fontSize = 12.sp)
-                    }
-                }
-                firebaseError != null -> {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(top = 4.dp),
-                        horizontalArrangement = Arrangement.Start
-                    ) {
-                        Text(firebaseError ?: "", color = Color.Red, fontSize = 12.sp)
-                    }
-                }
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Link "Have an account? Login"
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.End
-            ) {
-                TextButton(
-                    onClick = { navController.navigate("login") },
-                    enabled = !isLoading,
-                    contentPadding = PaddingValues(0.dp)
-                ) {
-                    Text(
-                        "Have an account? Login",
-                        color = PurplePrimary,
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Medium
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.weight(1f))
-
-            // Botón Next - CORREGIDO
             Column(
-                modifier = Modifier.padding(bottom = 32.dp)
+                modifier = Modifier
+                    .fillMaxSize(),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxWidth()
+                        .verticalScroll(rememberScrollState()),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Spacer(modifier = Modifier.height(80.dp))
+
+                    Text(
+                        text = "Forgot\nPassword",
+                        fontSize = 40.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.Black,
+                        textAlign = TextAlign.Start,
+                        lineHeight = 38.sp,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+
+                    Spacer(modifier = Modifier.height(20.dp))
+
+                    Text(
+                        text = "Water is life. Water is a basic human need in various lines of life humans need water.",
+                        fontSize = 14.sp,
+                        color = Color.Gray,
+                        textAlign = TextAlign.Start,
+                        lineHeight = 20.sp,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+
+                    Spacer(modifier = Modifier.height(40.dp))
+
+                    OutlinedTextField(
+                        value = email,
+                        onValueChange = {
+                            email = it.trim()
+                            showEmailError = false
+                            isEmailValid = true
+                            firebaseError = null
+                        },
+                        label = { Text("Email") },
+                        textStyle = TextStyle(color = if (email.isNotBlank()) PurplePrimary else Color.Gray, fontSize = 16.sp),
+                        keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Email),
+                        modifier = Modifier.fillMaxWidth(),
+                        isError = showEmailError || !isEmailValid,
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = PurplePrimary,
+                            unfocusedBorderColor = Color.Gray.copy(alpha = 0.3f),
+                            focusedTextColor = PurplePrimary,
+                            unfocusedTextColor = Color.Gray,
+                            unfocusedLabelColor = Color.Gray,
+                            focusedContainerColor = Color.Transparent,
+                            unfocusedContainerColor = Color.Transparent
+                        ),
+                        shape = RoundedCornerShape(12.dp)
+                    )
+
+                    when {
+                        showEmailError -> Text("Email is required", color = Color.Red, fontSize = 12.sp, modifier = Modifier.align(Alignment.Start).padding(top = 4.dp))
+                        !isEmailValid -> Text("Invalid email format", color = Color.Red, fontSize = 12.sp, modifier = Modifier.align(Alignment.Start).padding(top = 4.dp))
+                        firebaseError != null -> Text(firebaseError ?: "", color = Color.Red, fontSize = 12.sp, modifier = Modifier.align(Alignment.Start).padding(top = 4.dp))
+                    }
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                }
+
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    TextButton(
+                        onClick = { navController.navigate("login") },
+                        enabled = !isLoading,
+                        contentPadding = PaddingValues(0.dp)
+                    ) {
+                        Text("Have an account? ", color = Color.Black, fontSize = 14.sp)
+                        Text("Login", color = PurplePrimary, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
+                    }
+                }
                 Button(
                     onClick = {
                         when {
@@ -192,28 +166,22 @@ fun ForgotPasswordScreen(navController: NavController) {
                             }
                         }
                     },
-                    enabled = !isLoading,
-                    colors = ButtonDefaults.buttonColors(containerColor = PurplePrimary),
-                    shape = RoundedCornerShape(12.dp),
+                    enabled = isFormValid && !isLoading,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = if (isFormValid) PurplePrimary else Color.LightGray
+                    ),
+                    shape = RoundedCornerShape(50),
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(56.dp)
+                        .height(60.dp)
                 ) {
                     if (isLoading) {
-                        CircularProgressIndicator(
-                            color = Color.White,
-                            modifier = Modifier.size(24.dp),
-                            strokeWidth = 2.dp
-                        )
+                        CircularProgressIndicator(color = Color.White, modifier = Modifier.size(24.dp), strokeWidth = 2.dp)
                     } else {
-                        Text(
-                            "Next",
-                            color = Color.White,
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.SemiBold
-                        )
+                        Text("Next", color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
                     }
                 }
+
             }
         }
     }

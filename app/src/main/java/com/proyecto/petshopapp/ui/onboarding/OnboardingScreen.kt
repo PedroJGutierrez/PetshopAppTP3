@@ -37,7 +37,7 @@ val pages = listOf(
     OnboardingPage(
         "Start now",
         "Create your account and never miss a pet promotion again.",
-        R.drawable.senioora_salchi
+        R.drawable.abuela_salchi
     )
 )
 
@@ -61,29 +61,37 @@ fun OnboardingScreen(navController: NavController) {
         ) { page ->
             val item = pages[page]
             Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 16.dp),
                 verticalArrangement = Arrangement.Center,
-                modifier = Modifier.fillMaxSize()
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
                     text = item.title,
-                    fontSize = 26.sp,
+                    fontSize = 40.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Color.Black
+                    color = Color.Black,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 24.dp)
+                        .align(Alignment.Start),
+                    lineHeight = 44.sp,
                 )
-                Spacer(modifier = Modifier.height(16.dp))
                 Image(
                     painter = painterResource(id = item.imageRes),
                     contentDescription = null,
-                    modifier = Modifier.size(220.dp)
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(300.dp)
+                        .padding(bottom = 24.dp)
                 )
-                Spacer(modifier = Modifier.height(16.dp))
                 Text(
                     text = item.description,
                     fontSize = 14.sp,
                     color = Color.Gray,
                     lineHeight = 20.sp,
-                    modifier = Modifier.padding(horizontal = 16.dp)
+                    modifier = Modifier.fillMaxWidth()
                 )
             }
         }
@@ -109,7 +117,7 @@ fun OnboardingScreen(navController: NavController) {
             shape = RoundedCornerShape(50),
             modifier = Modifier
                 .fillMaxWidth()
-                .height(50.dp)
+                .height(60.dp)
         ) {
             Text(
                 text = if (pagerState.currentPage == pages.lastIndex) "Get Started" else "Next",
