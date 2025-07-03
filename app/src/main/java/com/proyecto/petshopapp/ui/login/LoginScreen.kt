@@ -236,7 +236,14 @@ fun LoginScreen(
                             ),
                             border = BorderStroke(1.dp, Color.Gray.copy(alpha = 0.3f))
                         ) {
-                            Text("Facebook")
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(
+                                    painter = painterResource(R.drawable.icono_facebook),
+                                    contentDescription = "Facebook",
+                                    modifier = Modifier.size(61.dp),
+                                    tint = Color.Unspecified
+                                )
+                            }
                         }
                     }
 
